@@ -1,18 +1,35 @@
 # Node.js
 node_modules/
-.env
 npm-debug.log
 yarn-error.log
+.env
 
 # Docker
 docker-compose.override.yml
+docker-compose.yml
 database/data/
 
 # Vue.js
 frontend/node_modules/
-dist/
-.vite/
+frontend/dist/
+frontend/.vite/
 
 # Logs
 logs/
 *.log
+
+# IDEs/Editor Configurations
+.vscode/
+.idea/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Docker files (cache, etc)
+.docker/
+
+# Miscellaneous
+*.bak
+*.swp
+*.swo
