@@ -1,0 +1,18 @@
+# Node.js
+node_modules/
+.env
+npm-debug.log
+yarn-error.log
+
+# Docker
+docker-compose.override.yml
+database/data/
+
+# Vue.js
+frontend/node_modules/
+dist/
+.vite/
+
+# Logs
+logs/
+*.log
