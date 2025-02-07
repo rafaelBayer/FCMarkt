@@ -108,4 +108,5 @@ FCMarkt é uma plataforma focada em dados avançados de jogadores e equipes de f
 
 ## Licença
 
-Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+Este projeto é licenciado sob a Licença Pública Geral GNU v3.0 - veja o arquivo [LICENSE](./LICENSE) para mais detalhes.
+

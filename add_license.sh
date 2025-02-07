@@ -1,4 +1,7 @@
-/*
+#!/bin/bash
+
+# Defina o texto do comentário de licença
+LICENSE_TEXT="/*
  * Copyright (C) 2025 Rafael Bayer
  * 
  * This file is part of FCMarkt.
@@ -15,21 +18,11 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with FCMarkt.  If not, see <https://www.gnu.org/licenses/>.
- */
-import { createRouter, createWebHistory } from 'vue-router';
-import HomeView from '../views/HomeView.vue';
+ */"
 
-const routes = [
-  {
-    path: '/',
-    name: 'Home',
-    component: HomeView
-  }
-];
-
-const router = createRouter({
-  history: createWebHistory(),
-  routes
-});
-
-export default router;
+# Encontre todos os arquivos de código e adicione o comentário de licença
+for file in $(find . -type f \( -iname "*.js" -o -iname "*.php" -o -iname "*.html" -o -iname "*.css" \)); do
+  # Adicionar o comentário no início do arquivo
+  echo -e "$LICENSE_TEXT\n$(cat $file)" > $file
+  echo "Licença adicionada a: $file"
+done
