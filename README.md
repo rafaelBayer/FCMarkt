@@ -59,6 +59,7 @@ npm run lint
 npm run build
 npm run seed:countries
 npm run seed:leagues
+npm run seed:teams
 ```
 
 ## Popular Paises
@@ -127,6 +128,35 @@ liga-futve.svg
 ```
 
 Tambem sao aceitos `.png` e `.webp`.
+
+## Popular Times
+
+O seed de times busca clubes por liga na TheSportsDB, uma API documentada que retorna metadados e artwork de times. O script usa:
+
+- `teams.name`: nome oficial/registrado quando a fonte retorna alternativa mais completa.
+- `teams.short_name`: nome mais conhecido.
+- `teams.city`: localidade retornada pela fonte.
+- `teams.stadium`: estadio.
+- `teams.founded_year`: ano de fundacao.
+- `teams.logo_url`: badge/logo retornado pela fonte.
+
+Antes de rodar, execute o SQL atualizado em `supabase/schema.sql`, pois ele cria o indice unico `teams(league_id, name)`.
+
+Depois rode:
+
+```bash
+npm run seed:countries
+npm run seed:leagues
+npm run seed:teams
+```
+
+O seed de times usa a chave publica gratuita `123` da TheSportsDB por padrao. Se voce tiver uma chave propria, configure:
+
+```env
+THE_SPORTS_DB_API_KEY=
+```
+
+Algumas ligas podem nao retornar clubes se a fonte nao tiver cobertura atualizada para aquele campeonato. O script avisa no terminal quais ligas ficaram sem retorno para revisao manual ou troca de fonte.
 
 ## Estrutura
 

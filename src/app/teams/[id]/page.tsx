@@ -31,21 +31,22 @@ export default async function TeamDetailsPage({ params }: TeamDetailsPageProps) 
 
   const league = team.leagues;
   const country = league?.countries;
+  const displayName = team.short_name || team.name;
 
   return (
     <div>
-      <PageHeader title={team.name} description="Pagina publica de detalhes do time." />
+      <PageHeader title={displayName} description="Pagina publica de detalhes do time." />
       <section className="grid gap-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-[180px_1fr]">
         <div className="flex h-44 w-44 items-center justify-center rounded-lg border border-slate-200 bg-slate-50">
           {team.logo_url ? (
             <img src={team.logo_url} alt="" className="max-h-36 max-w-36 object-contain" />
           ) : (
-            <span className="text-4xl font-bold text-slate-300">{team.name.slice(0, 2)}</span>
+            <span className="text-4xl font-bold text-slate-300">{displayName.slice(0, 2)}</span>
           )}
         </div>
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-slate-950">{team.name}</h2>
+            <h2 className="text-2xl font-bold text-slate-950">{displayName}</h2>
             <p className="mt-1 text-slate-600">
               {league?.name ?? "Liga nao informada"}
               {country ? `, ${country.name}` : ""}
@@ -55,7 +56,7 @@ export default async function TeamDetailsPage({ params }: TeamDetailsPageProps) 
             <Info label="Cidade" value={team.city} />
             <Info label="Estadio" value={team.stadium} />
             <Info label="Fundacao" value={team.founded_year?.toString()} />
-            <Info label="Nome curto" value={team.short_name} />
+            <Info label="Nome oficial" value={team.name} />
           </dl>
           {team.description ? <p className="leading-7 text-slate-700">{team.description}</p> : null}
         </div>

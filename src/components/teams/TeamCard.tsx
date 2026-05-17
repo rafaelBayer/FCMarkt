@@ -8,6 +8,7 @@ type TeamCardProps = {
 export function TeamCard({ team }: TeamCardProps) {
   const league = team.leagues;
   const country = league?.countries;
+  const displayName = team.short_name || team.name;
 
   return (
     <Link
@@ -23,7 +24,7 @@ export function TeamCard({ team }: TeamCardProps) {
           )}
         </div>
         <div className="min-w-0">
-          <h2 className="truncate text-lg font-semibold text-slate-950">{team.name}</h2>
+          <h2 className="truncate text-lg font-semibold text-slate-950">{displayName}</h2>
           <p className="text-sm text-slate-600">
             {league?.name ?? "Liga nao informada"}
             {country ? `, ${country.name}` : ""}

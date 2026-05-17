@@ -34,6 +34,7 @@ create index if not exists leagues_country_id_idx on leagues(country_id);
 create index if not exists teams_league_id_idx on teams(league_id);
 create unique index if not exists countries_code_unique_idx on countries(code);
 create unique index if not exists leagues_country_id_name_unique_idx on leagues(country_id, name);
+create unique index if not exists teams_league_id_name_unique_idx on teams(league_id, name);
 
 insert into storage.buckets (id, name, public)
 values ('team-logos', 'team-logos', true)
