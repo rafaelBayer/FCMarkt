@@ -131,7 +131,9 @@ Tambem sao aceitos `.png` e `.webp`.
 
 ## Popular Times
 
-O seed de times busca clubes por liga na TheSportsDB, uma API documentada que retorna metadados e artwork de times. O script usa:
+O seed de times usa API-Football como fonte principal quando `API_FOOTBALL_KEY` estiver configurada. Essa fonte consulta clubes por liga e temporada, o que evita o problema de retorno parcial de 10 clubes da TheSportsDB. A TheSportsDB fica apenas como fallback e o script rejeita qualquer retorno com quantidade diferente da esperada para a liga.
+
+O script usa:
 
 - `teams.name`: nome oficial/registrado quando a fonte retorna alternativa mais completa.
 - `teams.short_name`: nome mais conhecido.
@@ -142,6 +144,12 @@ O seed de times busca clubes por liga na TheSportsDB, uma API documentada que re
 
 Antes de rodar, execute o SQL atualizado em `supabase/schema.sql`, pois ele cria o indice unico `teams(league_id, name)`.
 
+Configure a chave da API-Football no `.env.local`:
+
+```env
+API_FOOTBALL_KEY=
+```
+
 Depois rode:
 
 ```bash
@@ -150,13 +158,7 @@ npm run seed:leagues
 npm run seed:teams
 ```
 
-O seed de times usa a chave publica gratuita `123` da TheSportsDB por padrao. Se voce tiver uma chave propria, configure:
-
-```env
-THE_SPORTS_DB_API_KEY=
-```
-
-Algumas ligas podem nao retornar clubes se a fonte nao tiver cobertura atualizada para aquele campeonato. O script avisa no terminal quais ligas ficaram sem retorno para revisao manual ou troca de fonte.
+O script verifica os times ja cadastrados por liga e ignora os existentes para evitar duplicacao. Se uma fonte retornar lista incompleta ou com times demais, a liga e ignorada e o terminal mostra o motivo.
 
 ## Estrutura
 
