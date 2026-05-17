@@ -8,18 +8,21 @@ export type Database = {
           id: string;
           name: string;
           code: string | null;
+          flag_url: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
           code?: string | null;
+          flag_url?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
           code?: string | null;
+          flag_url?: string | null;
           created_at?: string;
         };
         Relationships: [];

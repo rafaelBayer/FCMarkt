@@ -4,6 +4,7 @@ import type { Country } from "@/types/database";
 export type CountryInput = {
   name: string;
   code?: string | null;
+  flagUrl?: string | null;
 };
 
 export async function getCountries(): Promise<Country[]> {
@@ -24,13 +25,14 @@ export async function getCountries(): Promise<Country[]> {
 export async function createCountry(input: CountryInput) {
   const name = input.name.trim();
   const code = input.code?.trim().toUpperCase() || null;
+  const flag_url = input.flagUrl?.trim() || null;
 
   if (!name) {
     throw new Error("Nome do pais e obrigatorio.");
   }
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("countries").insert({ name, code });
+  const { error } = await supabase.from("countries").insert({ name, code, flag_url });
 
   if (error) {
     throw new Error(`Erro ao cadastrar pais: ${error.message}`);

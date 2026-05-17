@@ -57,7 +57,22 @@ FCMarkt e uma aplicacao para organizar dados de modo carreira FIFA/EA FC, inspir
 npm run dev
 npm run lint
 npm run build
+npm run seed:countries
 ```
+
+## Popular Paises
+
+O seed de paises usa a API REST Countries para buscar nome, sigla ISO-2 e bandeira.
+
+1. Rode o SQL atualizado em `supabase/schema.sql` no Supabase SQL Editor. Ele adiciona `countries.flag_url` e o indice unico por `countries.code`.
+2. Confirme que `.env.local` tem `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+3. Execute:
+
+   ```bash
+   npm run seed:countries
+   ```
+
+O script usa `upsert` por `code`, entao pode ser executado novamente para atualizar nomes e bandeiras sem duplicar paises.
 
 ## Estrutura
 

@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "seed:countries": "node scripts/seed-countries.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

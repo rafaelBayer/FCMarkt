@@ -2,8 +2,11 @@ create table if not exists countries (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   code text,
+  flag_url text,
   created_at timestamp with time zone default now()
 );
+
+alter table countries add column if not exists flag_url text;
 
 create table if not exists leagues (
   id uuid primary key default gen_random_uuid(),
@@ -29,6 +32,7 @@ create table if not exists teams (
 
 create index if not exists leagues_country_id_idx on leagues(country_id);
 create index if not exists teams_league_id_idx on teams(league_id);
+create unique index if not exists countries_code_unique_idx on countries(code);
 
 insert into storage.buckets (id, name, public)
 values ('team-logos', 'team-logos', true)

@@ -24,11 +24,20 @@ export default async function CountriesPage() {
           {countries.map((country) => (
             <div
               key={country.id}
-              className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4"
+              className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-4"
             >
-              <span className="font-semibold text-slate-950">{country.name}</span>
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-9 w-12 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-200 bg-slate-50">
+                  {country.flag_url ? (
+                    <img src={country.flag_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-xs font-semibold text-slate-400">--</span>
+                  )}
+                </div>
+                <span className="truncate font-semibold text-slate-950">{country.name}</span>
+              </div>
               {country.code ? (
-                <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
+                <span className="shrink-0 rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
                   {country.code}
                 </span>
               ) : null}
