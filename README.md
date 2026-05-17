@@ -1,112 +1,85 @@
-# FCMarkt - Modo Carreira Fictício
+# FCMarkt
 
-FCMarkt é uma plataforma focada em dados avançados de jogadores e equipes de futebol, inspirada no Transfermarkt. O projeto permite aos usuários criar e acompanhar suas próprias linhas do tempo em um modo carreira fictício. Nele, os usuários podem realizar transferências de jogadores entre equipes, salvar todas as transferências no banco de dados e visualizar os dados de jogadores e equipes ao longo das temporadas.
+FCMarkt e uma aplicacao para organizar dados de modo carreira FIFA/EA FC, inspirada no Transfermarkt. O MVP atual foca em paises, ligas e times, com upload de logos pelo Supabase Storage e paginas publicas de detalhes dos clubes.
 
-## Tecnologias Utilizadas
+## Stack
 
-- **Frontend**: Vue.js, Axios, Tailwind CSS
-- **Backend**: Node.js, Express
-- **Banco de Dados**: MySQL (rodando via Docker)
+- Next.js com App Router
+- TypeScript
+- Tailwind CSS
+- Supabase como backend
+- Supabase PostgreSQL como banco
+- Supabase Storage para logos dos times
 
-## Funcionalidades
+## MVP
 
-- Visualizar dados avançados de jogadores e equipes.
-- Realizar transferências de jogadores entre equipes.
-- Salvar transferências no banco de dados para construção de uma linha do tempo.
-- Acompanhar a evolução de sua carreira por temporada, visualizando detalhes de transferências e jogos.
+- Cadastro de paises
+- Cadastro de ligas vinculadas a paises
+- Cadastro de times vinculados a ligas
+- Upload de logo dos times no bucket `team-logos`
+- Listagem de times
+- Pagina publica de detalhes do time
 
-## Como Rodar o Projeto
+## Como Rodar
 
-### Pré-requisitos
+1. Instale as dependencias:
 
-- **Node.js** (versão recomendada: 16.x ou superior)
-- **Docker** (para o banco de dados MySQL)
-
-### Passo a Passo de Instalação
-
-#### Para Linux:
-
-1. Clone o repositório:
    ```bash
-   git clone https://github.com/seu-usuario/FCMarkt.git
-   cd FCMarkt
-   ```
-
-2. Navegue até a pasta `frontend` e instale as dependências:
-   ```bash
-   cd frontend
    npm install
    ```
 
-3. Navegue até a pasta `backend` e instale as dependências:
+2. Copie o arquivo de ambiente:
+
    ```bash
-   cd ../backend
-   npm install
+   cp .env.example .env.local
    ```
 
-4. Em seguida, configure o Docker para rodar o banco de dados MySQL:
-   - Certifique-se de que o Docker esteja rodando:
-     ```bash
-     sudo systemctl start docker
-     ```
+3. Preencha as variaveis:
 
-   - Na pasta raiz do projeto, execute o comando para iniciar os containers:
-     ```bash
-     sudo docker-compose up -d
-     ```
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+   ```
 
-5. Com o banco de dados rodando, volte para a pasta `backend` e inicie o servidor:
+4. Crie as tabelas e o bucket no Supabase usando o SQL em `supabase/schema.sql`.
+
+5. Rode o projeto:
+
    ```bash
    npm run dev
    ```
 
-6. Agora, no terminal da pasta `frontend`, inicie o servidor de desenvolvimento Vue.js:
-   ```bash
-   cd ../frontend
-   npm run serve
-   ```
+6. Acesse `http://localhost:3000`.
 
-7. O projeto estará disponível no navegador em `http://localhost:8080`.
+## Scripts
 
-#### Para Windows:
+```bash
+npm run dev
+npm run lint
+npm run build
+```
 
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/seu-usuario/FCMarkt.git
-   cd FCMarkt
-   ```
+## Estrutura
 
-2. Navegue até a pasta `frontend` e instale as dependências:
-   ```bash
-   cd frontend
-   npm install
-   ```
+```txt
+src/
+  app/
+  components/
+  lib/supabase/
+  services/
+  types/
+supabase/
+  schema.sql
+legacy/
+  frontend/
+  backend/
+  database/
+```
 
-3. Navegue até a pasta `backend` e instale as dependências:
-   ```bash
-   cd ../backend
-   npm install
-   ```
+## Legado
 
-4. Inicie o Docker Desktop e execute o comando para rodar os containers:
-   ```bash
-   docker-compose up -d
-   ```
+A estrutura antiga em Vue.js, Node/Express e Docker/MySQL foi movida para `legacy/` para preservar referencia historica sem misturar com a nova stack.
 
-5. No terminal, na pasta `backend`, inicie o servidor:
-   ```bash
-   npm run dev
-   ```
+## Licenca
 
-6. No terminal da pasta `frontend`, inicie o servidor de desenvolvimento Vue.js:
-   ```bash
-   cd ../frontend
-   npm run serve
-   ```
-
-7. O projeto estará disponível no navegador em `http://localhost:8080`.
-
-## Licença
-
-Este projeto é licenciado sob a Licença Pública Geral GNU v3.0 - veja o arquivo [LICENSE](./LICENSE) para mais detalhes.
-
+Este projeto e licenciado sob a Licenca Publica Geral GNU v3.0. Veja [LICENSE](./LICENSE).
