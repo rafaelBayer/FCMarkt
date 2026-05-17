@@ -131,24 +131,20 @@ Tambem sao aceitos `.png` e `.webp`.
 
 ## Popular Times
 
-O seed de times usa API-Football como fonte principal quando `API_FOOTBALL_KEY` estiver configurada. Essa fonte consulta clubes por liga e temporada, o que evita o problema de retorno parcial de 10 clubes da TheSportsDB. A TheSportsDB fica apenas como fallback e o script rejeita qualquer retorno com quantidade diferente da esperada para a liga.
+O seed de times usa paginas publicas de temporada da Wikipedia como fonte auditavel, uma por liga. Isso evita os limites de temporada da API-Football no plano gratis e tambem evita o retorno parcial de 10 clubes da TheSportsDB.
 
-O script usa:
+O script valida a quantidade esperada de clubes antes de cadastrar. Se a pagina retornar menos ou mais clubes do que o esperado, a liga e ignorada para evitar dados errados.
 
-- `teams.name`: nome oficial/registrado quando a fonte retorna alternativa mais completa.
-- `teams.short_name`: nome mais conhecido.
-- `teams.city`: localidade retornada pela fonte.
-- `teams.stadium`: estadio.
-- `teams.founded_year`: ano de fundacao.
-- `teams.logo_url`: badge/logo retornado pela fonte.
+O script preenche:
+
+- `teams.name`: titulo do artigo do clube quando disponivel, geralmente mais proximo do nome oficial.
+- `teams.short_name`: nome exibido na tabela da temporada, geralmente o nome mais conhecido.
+- `teams.city`: cidade/localidade quando a tabela informa.
+- `teams.stadium`: estadio quando a tabela informa.
+- `teams.founded_year`: fica vazio por enquanto.
+- `teams.logo_url`: fica vazio por enquanto.
 
 Antes de rodar, execute o SQL atualizado em `supabase/schema.sql`, pois ele cria o indice unico `teams(league_id, name)`.
-
-Configure a chave da API-Football no `.env.local`:
-
-```env
-API_FOOTBALL_KEY=
-```
 
 Depois rode:
 
@@ -159,6 +155,19 @@ npm run seed:teams
 ```
 
 O script verifica os times ja cadastrados por liga e ignora os existentes para evitar duplicacao. Se uma fonte retornar lista incompleta ou com times demais, a liga e ignorada e o terminal mostra o motivo.
+
+Para testar a extracao sem gravar no Supabase:
+
+```bash
+SEED_TEAMS_DRY_RUN=1 npm run seed:teams
+```
+
+No PowerShell:
+
+```powershell
+$env:SEED_TEAMS_DRY_RUN = "1"
+npm run seed:teams
+```
 
 ## Estrutura
 
