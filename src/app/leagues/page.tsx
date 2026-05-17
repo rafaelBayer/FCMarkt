@@ -24,13 +24,22 @@ export default async function LeaguesPage() {
           {leagues.map((league) => (
             <div
               key={league.id}
-              className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4"
+              className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-4"
             >
-              <div>
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-200 bg-slate-50">
+                  {league.logo_url ? (
+                    <img src={league.logo_url} alt="" className="max-h-10 max-w-10 object-contain" />
+                  ) : (
+                    <span className="text-xs font-semibold text-slate-400">--</span>
+                  )}
+                </div>
+                <div className="min-w-0">
                 <h2 className="font-semibold text-slate-950">{league.name}</h2>
                 <p className="text-sm text-slate-600">
                   {league.countries?.name ?? "Pais nao informado"}
                 </p>
+                </div>
               </div>
             </div>
           ))}

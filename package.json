@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "lint": "eslint .",
-    "seed:countries": "node scripts/seed-countries.mjs"
+    "seed:countries": "node scripts/seed-countries.mjs",
+    "seed:leagues": "node scripts/seed-leagues.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

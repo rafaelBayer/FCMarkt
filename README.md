@@ -58,6 +58,7 @@ npm run dev
 npm run lint
 npm run build
 npm run seed:countries
+npm run seed:leagues
 ```
 
 ## Popular Paises
@@ -73,6 +74,59 @@ O seed de paises usa a API REST Countries para buscar nome, sigla ISO-2 e bandei
    ```
 
 O script usa `upsert` por `code`, entao pode ser executado novamente para atualizar nomes e bandeiras sem duplicar paises.
+
+## Popular Ligas
+
+O seed de ligas cadastra uma lista curada de primeiras divisoes e vincula cada liga ao pais correspondente.
+
+1. Rode o SQL atualizado em `supabase/schema.sql` no Supabase SQL Editor. Ele cria o indice unico por `leagues.country_id + leagues.name` e o bucket publico `league-logos`.
+2. Execute o seed de paises antes, porque as ligas dependem deles:
+
+   ```bash
+   npm run seed:countries
+   ```
+
+3. Execute:
+
+   ```bash
+   npm run seed:leagues
+   ```
+
+England e Scotland nao vem da REST Countries como paises independentes. O seed cria essas duas entradas automaticamente com codigos futebolisticos `ENG` e `SCO` caso elas ainda nao existam.
+
+### Logos Das Ligas
+
+Logos de campeonatos sao marcas registradas e podem mudar por patrocinio. Para evitar hotlink fragil ou uso de arquivos sem controle, o seed procura arquivos locais em `assets/league-logos/` e envia para o bucket `league-logos`.
+
+Use estes nomes de arquivo quando tiver os assets oficiais/licenciados:
+
+```txt
+premier-league.svg
+la-liga.svg
+bundesliga.svg
+serie-a.svg
+ligue-1.svg
+liga-portugal.svg
+eredivisie.svg
+belgian-pro-league.svg
+danish-superliga.svg
+scottish-premiership.svg
+saudi-pro-league.svg
+major-league-soccer.svg
+liga-mx.svg
+campeonato-brasileiro-serie-a.svg
+liga-profesional-de-futbol.svg
+liga-auf-uruguaya.svg
+division-profesional-paraguay.svg
+liga-de-primera-chile.svg
+categoria-primera-a.svg
+liga-1-peru.svg
+ligapro-serie-a.svg
+division-profesional-bolivia.svg
+liga-futve.svg
+```
+
+Tambem sao aceitos `.png` e `.webp`.
 
 ## Estrutura
 

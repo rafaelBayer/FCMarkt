@@ -33,17 +33,72 @@ create table if not exists teams (
 create index if not exists leagues_country_id_idx on leagues(country_id);
 create index if not exists teams_league_id_idx on teams(league_id);
 create unique index if not exists countries_code_unique_idx on countries(code);
+create unique index if not exists leagues_country_id_name_unique_idx on leagues(country_id, name);
 
 insert into storage.buckets (id, name, public)
 values ('team-logos', 'team-logos', true)
 on conflict (id) do update set public = true;
 
-create policy "Public read team logos"
-on storage.objects for select
-to anon
-using (bucket_id = 'team-logos');
+insert into storage.buckets (id, name, public)
+values ('league-logos', 'league-logos', true)
+on conflict (id) do update set public = true;
 
-create policy "Anon upload team logos"
-on storage.objects for insert
-to anon
-with check (bucket_id = 'team-logos');
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage'
+      and tablename = 'objects'
+      and policyname = 'Public read team logos'
+  ) then
+    create policy "Public read team logos"
+    on storage.objects for select
+    to anon
+    using (bucket_id = 'team-logos');
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage'
+      and tablename = 'objects'
+      and policyname = 'Anon upload team logos'
+  ) then
+    create policy "Anon upload team logos"
+    on storage.objects for insert
+    to anon
+    with check (bucket_id = 'team-logos');
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage'
+      and tablename = 'objects'
+      and policyname = 'Public read league logos'
+  ) then
+    create policy "Public read league logos"
+    on storage.objects for select
+    to anon
+    using (bucket_id = 'league-logos');
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage'
+      and tablename = 'objects'
+      and policyname = 'Anon upload league logos'
+  ) then
+    create policy "Anon upload league logos"
+    on storage.objects for insert
+    to anon
+    with check (bucket_id = 'league-logos');
+  end if;
+end $$;
