@@ -12,109 +12,109 @@ const THE_SPORTS_DB_BASE_URL = `https://www.thesportsdb.com/api/v1/json/${THE_SP
 const REQUEST_DELAY_MS = 2300;
 
 const LEAGUE_SOURCES = [
-  source("ENG", ["England"], "Premier League", 2025, 20, ["Premier League"], [
+  source("ENG", ["England"], "Premier League", 39, 2025, 20, ["Premier League"], [
     "English Premier League",
     "English_Premier_League"
   ]),
-  source("ES", ["Spain"], "La Liga", 2025, 20, ["La Liga", "LaLiga"], [
+  source("ES", ["Spain"], "La Liga", 140, 2025, 20, ["La Liga", "LaLiga"], [
     "Spanish La Liga",
     "Spanish_La_Liga",
     "La Liga"
   ]),
-  source("DE", ["Germany"], "Bundesliga", 2025, 18, ["Bundesliga"], [
+  source("DE", ["Germany"], "Bundesliga", 78, 2025, 18, ["Bundesliga"], [
     "German Bundesliga",
     "German_Bundesliga",
     "Bundesliga"
   ]),
-  source("IT", ["Italy"], "Serie A", 2025, 20, ["Serie A"], [
+  source("IT", ["Italy"], "Serie A", 135, 2025, 20, ["Serie A"], [
     "Italian Serie A",
     "Italian_Serie_A",
     "Serie A"
   ]),
-  source("FR", ["France"], "Ligue 1", 2025, 18, ["Ligue 1"], [
+  source("FR", ["France"], "Ligue 1", 61, 2025, 18, ["Ligue 1"], [
     "French Ligue 1",
     "French_Ligue_1",
     "Ligue 1"
   ]),
-  source("PT", ["Portugal"], "Liga Portugal", 2025, 18, ["Liga Portugal", "Primeira Liga"], [
+  source("PT", ["Portugal"], "Liga Portugal", 94, 2025, 18, ["Liga Portugal", "Primeira Liga"], [
     "Portuguese Primeira Liga",
     "Portuguese_Primeira_Liga",
     "Primeira Liga"
   ]),
-  source("NL", ["Netherlands"], "Eredivisie", 2025, 18, ["Eredivisie"], [
+  source("NL", ["Netherlands"], "Eredivisie", 88, 2025, 18, ["Eredivisie"], [
     "Dutch Eredivisie",
     "Dutch_Eredivisie",
     "Eredivisie"
   ]),
-  source("BE", ["Belgium"], "Belgian Pro League", 2025, 16, ["Jupiler Pro League", "Belgian Pro League"], [
+  source("BE", ["Belgium"], "Belgian Pro League", 144, 2025, 16, ["Jupiler Pro League", "Belgian Pro League"], [
     "Belgian Pro League",
     "Belgian_Pro_League",
     "Jupiler Pro League"
   ]),
-  source("DK", ["Denmark"], "Danish Superliga", 2025, 12, ["Superliga", "Danish Superliga"], [
+  source("DK", ["Denmark"], "Danish Superliga", 119, 2025, 12, ["Superliga", "Danish Superliga"], [
     "Danish Superliga",
     "Danish_Superliga",
     "Superliga"
   ]),
-  source("SCO", ["Scotland"], "Scottish Premiership", 2025, 12, ["Premiership", "Scottish Premiership"], [
+  source("SCO", ["Scotland"], "Scottish Premiership", 179, 2025, 12, ["Premiership", "Scottish Premiership"], [
     "Scottish Premiership",
     "Scottish_Premiership"
   ]),
-  source("SA", ["Saudi Arabia"], "Saudi Pro League", 2025, 18, ["Saudi Pro League", "Pro League"], [
+  source("SA", ["Saudi Arabia"], "Saudi Pro League", 307, 2025, 18, ["Saudi Pro League", "Pro League"], [
     "Saudi Pro League",
     "Saudi_Pro_League"
   ]),
-  source("US", ["United States", "United States of America"], "Major League Soccer", 2026, 30, [
+  source("US", ["United States", "United States of America"], "Major League Soccer", 253, 2026, 30, [
     "Major League Soccer",
     "MLS"
   ], ["American Major League Soccer", "American_Major_League_Soccer", "Major League Soccer"]),
-  source("MX", ["Mexico"], "Liga MX", 2025, 18, ["Liga MX"], [
+  source("MX", ["Mexico"], "Liga MX", 262, 2025, 18, ["Liga MX"], [
     "Mexican Liga MX",
     "Mexican_Liga_MX",
     "Liga MX"
   ]),
-  source("BR", ["Brazil"], "Campeonato Brasileiro Serie A", 2026, 20, [
+  source("BR", ["Brazil"], "Campeonato Brasileiro Serie A", 71, 2026, 20, [
     "Serie A",
     "Brasileiro Serie A",
     "Campeonato Brasileiro Serie A"
   ], ["Brazilian Serie A", "Brazilian_Serie_A", "Campeonato Brasileiro Serie A"]),
-  source("AR", ["Argentina"], "Liga Profesional de Futbol", 2026, 30, [
+  source("AR", ["Argentina"], "Liga Profesional de Futbol", 128, 2026, 30, [
     "Liga Profesional Argentina",
     "Liga Profesional",
     "Primera Division"
   ], ["Argentinian Primera Division", "Argentinian_Primera_Division", "Liga Profesional de Futbol"]),
-  source("UY", ["Uruguay"], "Liga AUF Uruguaya", 2026, 16, [
+  source("UY", ["Uruguay"], "Liga AUF Uruguaya", 268, 2026, 16, [
     "Primera Division - Apertura",
     "Primera Division",
     "Liga AUF Uruguaya"
   ], ["Uruguayan Primera Division", "Uruguayan_Primera_Division", "Liga AUF Uruguaya"]),
-  source("PY", ["Paraguay"], "Division Profesional", 2026, 12, [
+  source("PY", ["Paraguay"], "Division Profesional", 250, 2026, 12, [
     "Division Profesional - Apertura",
     "Division Profesional"
   ], ["Paraguayan Primera Division", "Paraguayan_Primera_Division", "Paraguayan Division Profesional"]),
-  source("CL", ["Chile"], "Liga de Primera", 2026, 16, [
+  source("CL", ["Chile"], "Liga de Primera", 265, 2026, 16, [
     "Primera Division",
     "Liga de Primera"
   ], ["Chilean Primera Division", "Chilean_Primera_Division", "Liga de Primera"]),
-  source("CO", ["Colombia"], "Categoria Primera A", 2026, 20, [
+  source("CO", ["Colombia"], "Categoria Primera A", 239, 2026, 20, [
     "Primera A",
     "Categoria Primera A"
   ], ["Colombian Categoria Primera A", "Colombian_Categoria_Primera_A", "Categoria Primera A"]),
-  source("PE", ["Peru"], "Liga 1", 2026, 18, ["Primera Division", "Liga 1"], [
+  source("PE", ["Peru"], "Liga 1", 281, 2026, 18, ["Primera Division", "Liga 1"], [
     "Peruvian Primera Division",
     "Peruvian_Primera_Division",
     "Liga 1 Peru"
   ]),
-  source("EC", ["Ecuador"], "LigaPro Serie A", 2026, 16, ["Liga Pro", "LigaPro Serie A", "Serie A"], [
+  source("EC", ["Ecuador"], "LigaPro Serie A", 242, 2026, 16, ["Liga Pro", "LigaPro Serie A", "Serie A"], [
     "Ecuadorian Serie A",
     "Ecuadorian_Serie_A",
     "LigaPro Serie A"
   ]),
-  source("BO", ["Bolivia"], "Division Profesional", 2026, 16, [
+  source("BO", ["Bolivia"], "Division Profesional", 344, 2026, 16, [
     "Primera Division",
     "Division Profesional"
   ], ["Bolivian Primera Division", "Bolivian_Primera_Division", "Bolivian Division Profesional"]),
-  source("VE", ["Venezuela"], "Liga FUTVE", 2026, 14, ["Primera Division", "Liga FUTVE"], [
+  source("VE", ["Venezuela"], "Liga FUTVE", 299, 2026, 14, ["Primera Division", "Liga FUTVE"], [
     "Venezuelan Primera Division",
     "Venezuelan_Primera_Division",
     "Liga FUTVE"
@@ -244,16 +244,7 @@ async function fetchTeams(sourceConfig) {
 }
 
 async function fetchTeamsFromApiFootball(sourceConfig) {
-  const leagueId = await resolveApiFootballLeagueId(sourceConfig);
-
-  if (!leagueId) {
-    return {
-      provider: "API-Football",
-      teams: [],
-      toRow: toApiFootballTeamRow
-    };
-  }
-
+  const leagueId = sourceConfig.apiFootball.leagueId;
   const data = await fetchApiFootballJson(
     `/teams?league=${leagueId}&season=${sourceConfig.apiFootball.season}`
   );
@@ -264,28 +255,6 @@ async function fetchTeamsFromApiFootball(sourceConfig) {
     teams,
     toRow: toApiFootballTeamRow
   };
-}
-
-async function resolveApiFootballLeagueId(sourceConfig) {
-  const countryName = sourceConfig.apiFootball.countryName ?? sourceConfig.countryNames[0];
-  const data = await fetchApiFootballJson(
-    `/leagues?country=${encodeURIComponent(countryName)}&season=${sourceConfig.apiFootball.season}`
-  );
-  const leaguesResponse = Array.isArray(data.response) ? data.response : [];
-  const aliases = sourceConfig.apiFootball.aliases.map(normalizeName);
-  const matchedLeague = leaguesResponse.find((item) => {
-    const leagueName = normalizeName(item.league?.name);
-    const leagueType = normalizeName(item.league?.type);
-
-    return leagueType === "league" && aliases.some((alias) => leagueName === alias || leagueName.includes(alias));
-  });
-
-  if (!matchedLeague) {
-    console.warn(`API-Football nao encontrou liga: ${sourceConfig.leagueName} (${countryName}).`);
-    return null;
-  }
-
-  return matchedLeague.league.id;
 }
 
 async function fetchApiFootballJson(path) {
@@ -300,7 +269,14 @@ async function fetchApiFootballJson(path) {
     return { response: [] };
   }
 
-  return response.json();
+  const data = await response.json();
+  const errors = extractApiFootballErrors(data.errors);
+
+  if (errors.length > 0) {
+    console.warn(`API-Football retornou erro para ${path}: ${errors.join(" | ")}`);
+  }
+
+  return data;
 }
 
 async function fetchTeamsFromTheSportsDb(sourceConfig) {
@@ -480,19 +456,40 @@ function delay(milliseconds) {
   return new Promise((resolveDelay) => setTimeout(resolveDelay, milliseconds));
 }
 
-function source(countryCode, countryNames, leagueName, season, expectedTeams, apiFootballAliases, theSportsDbLeagues) {
+function source(countryCode, countryNames, leagueName, apiFootballLeagueId, season, expectedTeams, apiFootballAliases, theSportsDbLeagues) {
   return {
     countryCode,
     countryNames,
     leagueName,
     expectedTeams,
     apiFootball: {
+      leagueId: apiFootballLeagueId,
       season,
       countryName: countryNames[0],
       aliases: apiFootballAliases
     },
     theSportsDbLeagues
   };
+}
+
+function extractApiFootballErrors(errors) {
+  if (!errors) {
+    return [];
+  }
+
+  if (Array.isArray(errors)) {
+    return errors.map(String).filter(Boolean);
+  }
+
+  if (typeof errors === "string") {
+    return errors ? [errors] : [];
+  }
+
+  if (typeof errors === "object") {
+    return Object.values(errors).map(String).filter(Boolean);
+  }
+
+  return [];
 }
 
 function loadEnvFile(fileName) {
