@@ -11,6 +11,7 @@
     "seed:leagues": "node scripts/seed-leagues.mjs",
     "seed:teams": "node scripts/seed-teams.mjs",
     "analyze:eafc26": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/analyze-eafc26-csv.ts",
+    "analyze:eafc26:teams": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/analyze-eafc26-teams.ts",
     "import:eafc26:players": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/import-eafc26-players.ts",
     "import:eafc26:players:dry": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/import-eafc26-players.ts --dry-run"
   },

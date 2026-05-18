@@ -123,6 +123,7 @@ npm run seed:countries
 npm run seed:leagues
 npm run seed:teams
 npm run analyze:eafc26
+npm run analyze:eafc26:teams
 npm run import:eafc26:players:dry
 npm run import:eafc26:players -- --execute
 ```
@@ -203,6 +204,14 @@ npm run import:eafc26:players -- --execute
 ```
 
 O importador cria apenas jogadores em `players`. Ele nao cria times, ligas, transferencias ou elencos automaticamente. Veja mais em [docs/imports.md](docs/imports.md).
+
+Para reconciliar nomes de clubes do CSV com times existentes no Supabase:
+
+```bash
+npm run analyze:eafc26:teams
+```
+
+Aliases manuais ficam em `src/data/import-maps/team-aliases.json`. O relatorio e salvo em `imports/reports/eafc26-team-reconciliation.json` e nao cria dados automaticamente.
 
 ## Exclusao segura
 

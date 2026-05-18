@@ -91,6 +91,53 @@ Cada relatorio mostra:
 - erros e avisos;
 - exemplos de jogadores importaveis.
 
+## Reconciliacao de times
+
+A reconciliacao compara os clubes encontrados no CSV com os times cadastrados no Supabase. Ela serve para revisar nomes diferentes antes de qualquer tentativa futura de criar vinculos de elenco.
+
+Rode:
+
+```bash
+npm run analyze:eafc26:teams
+```
+
+O script usa o arquivo:
+
+```txt
+imports/kaggle/eafc26/EAFC26-Men.csv
+```
+
+Ele identifica a coluna de clube/time, conta jogadores por clube, busca os times existentes no Supabase e gera um relatorio com:
+
+- matches exatos;
+- matches por alias manual;
+- possiveis matches por normalizacao;
+- clubes nao encontrados;
+- aliases que apontam para times inexistentes;
+- possiveis duplicados no Supabase.
+
+O arquivo de aliases fica em:
+
+```txt
+src/data/import-maps/team-aliases.json
+```
+
+Cada alias aponta do nome encontrado no CSV para o nome esperado no Supabase:
+
+```json
+{
+  "Manchester Utd": "Manchester United"
+}
+```
+
+O relatorio JSON e salvo em:
+
+```txt
+imports/reports/eafc26-team-reconciliation.json
+```
+
+Times nao encontrados devem ser revisados manualmente. Esta fase nao cria times, ligas, jogadores, vinculos de elenco ou transferencias automaticamente.
+
 ## Fora do escopo
 
 Esta fase nao implementa scraping do SoFIFA, API-Football, Sportmonks, Cheat Engine, leitura de memoria do jogo, importacao automatica de transferencias, upload de foto de jogador, valores de mercado avancados, login ou permissoes complexas.
