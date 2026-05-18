@@ -11,7 +11,10 @@ const navigation = [
   { href: "/", label: "Inicio" },
   { href: "/countries", label: "Paises" },
   { href: "/leagues", label: "Ligas" },
-  { href: "/teams", label: "Times" }
+  { href: "/teams", label: "Times" },
+  { href: "/seasons", label: "Temporadas" },
+  { href: "/players", label: "Jogadores" },
+  { href: "/transfers", label: "Transferencias" }
 ];
 
 export default function RootLayout({
