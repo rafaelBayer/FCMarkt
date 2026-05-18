@@ -1,112 +1,195 @@
-# FCMarkt - Modo Carreira Fictício
+# FCMarkt
 
-FCMarkt é uma plataforma focada em dados avançados de jogadores e equipes de futebol, inspirada no Transfermarkt. O projeto permite aos usuários criar e acompanhar suas próprias linhas do tempo em um modo carreira fictício. Nele, os usuários podem realizar transferências de jogadores entre equipes, salvar todas as transferências no banco de dados e visualizar os dados de jogadores e equipes ao longo das temporadas.
+FCMarkt e uma aplicacao para organizar dados de modo carreira FIFA/EA FC, inspirada no Transfermarkt. O MVP atual foca em paises, ligas e times, com upload de logos pelo Supabase Storage e paginas publicas de detalhes dos clubes.
 
-## Tecnologias Utilizadas
+## Stack
 
-- **Frontend**: Vue.js, Axios, Tailwind CSS
-- **Backend**: Node.js, Express
-- **Banco de Dados**: MySQL (rodando via Docker)
+- Next.js com App Router
+- TypeScript
+- Tailwind CSS
+- Supabase como backend
+- Supabase PostgreSQL como banco
+- Supabase Storage para logos dos times
 
-## Funcionalidades
+## MVP
 
-- Visualizar dados avançados de jogadores e equipes.
-- Realizar transferências de jogadores entre equipes.
-- Salvar transferências no banco de dados para construção de uma linha do tempo.
-- Acompanhar a evolução de sua carreira por temporada, visualizando detalhes de transferências e jogos.
+- Cadastro de paises
+- Cadastro de ligas vinculadas a paises
+- Cadastro de times vinculados a ligas
+- Upload de logo dos times no bucket `team-logos`
+- Listagem de times
+- Pagina publica de detalhes do time
 
-## Como Rodar o Projeto
+## Como Rodar
 
-### Pré-requisitos
+1. Instale as dependencias:
 
-- **Node.js** (versão recomendada: 16.x ou superior)
-- **Docker** (para o banco de dados MySQL)
-
-### Passo a Passo de Instalação
-
-#### Para Linux:
-
-1. Clone o repositório:
    ```bash
-   git clone https://github.com/seu-usuario/FCMarkt.git
-   cd FCMarkt
-   ```
-
-2. Navegue até a pasta `frontend` e instale as dependências:
-   ```bash
-   cd frontend
    npm install
    ```
 
-3. Navegue até a pasta `backend` e instale as dependências:
+2. Copie o arquivo de ambiente:
+
    ```bash
-   cd ../backend
-   npm install
+   cp .env.example .env.local
    ```
 
-4. Em seguida, configure o Docker para rodar o banco de dados MySQL:
-   - Certifique-se de que o Docker esteja rodando:
-     ```bash
-     sudo systemctl start docker
-     ```
+3. Preencha as variaveis:
 
-   - Na pasta raiz do projeto, execute o comando para iniciar os containers:
-     ```bash
-     sudo docker-compose up -d
-     ```
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+   ```
 
-5. Com o banco de dados rodando, volte para a pasta `backend` e inicie o servidor:
+4. Crie as tabelas e o bucket no Supabase usando o SQL em `supabase/schema.sql`.
+
+5. Rode o projeto:
+
    ```bash
    npm run dev
    ```
 
-6. Agora, no terminal da pasta `frontend`, inicie o servidor de desenvolvimento Vue.js:
+6. Acesse `http://localhost:3000`.
+
+## Scripts
+
+```bash
+npm run dev
+npm run lint
+npm run build
+npm run seed:countries
+npm run seed:leagues
+npm run seed:teams
+```
+
+## Popular Paises
+
+O seed de paises usa a API REST Countries para buscar nome, sigla ISO-2 e bandeira.
+
+1. Rode o SQL atualizado em `supabase/schema.sql` no Supabase SQL Editor. Ele adiciona `countries.flag_url` e o indice unico por `countries.code`.
+2. Confirme que `.env.local` tem `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+3. Execute:
+
    ```bash
-   cd ../frontend
-   npm run serve
+   npm run seed:countries
    ```
 
-7. O projeto estará disponível no navegador em `http://localhost:8080`.
+O script usa `upsert` por `code`, entao pode ser executado novamente para atualizar nomes e bandeiras sem duplicar paises.
 
-#### Para Windows:
+## Popular Ligas
 
-1. Clone o repositório:
+O seed de ligas cadastra uma lista curada de primeiras divisoes e vincula cada liga ao pais correspondente.
+
+1. Rode o SQL atualizado em `supabase/schema.sql` no Supabase SQL Editor. Ele cria o indice unico por `leagues.country_id + leagues.name` e o bucket publico `league-logos`.
+2. Execute o seed de paises antes, porque as ligas dependem deles:
+
    ```bash
-   git clone https://github.com/seu-usuario/FCMarkt.git
-   cd FCMarkt
+   npm run seed:countries
    ```
 
-2. Navegue até a pasta `frontend` e instale as dependências:
+3. Execute:
+
    ```bash
-   cd frontend
-   npm install
+   npm run seed:leagues
    ```
 
-3. Navegue até a pasta `backend` e instale as dependências:
-   ```bash
-   cd ../backend
-   npm install
-   ```
+England e Scotland nao vem da REST Countries como paises independentes. O seed cria essas duas entradas automaticamente com codigos futebolisticos `ENG` e `SCO` caso elas ainda nao existam.
 
-4. Inicie o Docker Desktop e execute o comando para rodar os containers:
-   ```bash
-   docker-compose up -d
-   ```
+### Logos Das Ligas
 
-5. No terminal, na pasta `backend`, inicie o servidor:
-   ```bash
-   npm run dev
-   ```
+Logos de campeonatos sao marcas registradas e podem mudar por patrocinio. Para evitar hotlink fragil ou uso de arquivos sem controle, o seed procura arquivos locais em `assets/league-logos/` e envia para o bucket `league-logos`.
 
-6. No terminal da pasta `frontend`, inicie o servidor de desenvolvimento Vue.js:
-   ```bash
-   cd ../frontend
-   npm run serve
-   ```
+Use estes nomes de arquivo quando tiver os assets oficiais/licenciados:
 
-7. O projeto estará disponível no navegador em `http://localhost:8080`.
+```txt
+premier-league.svg
+la-liga.svg
+bundesliga.svg
+serie-a.svg
+ligue-1.svg
+liga-portugal.svg
+eredivisie.svg
+belgian-pro-league.svg
+danish-superliga.svg
+scottish-premiership.svg
+saudi-pro-league.svg
+major-league-soccer.svg
+liga-mx.svg
+campeonato-brasileiro-serie-a.svg
+liga-profesional-de-futbol.svg
+liga-auf-uruguaya.svg
+division-profesional-paraguay.svg
+liga-de-primera-chile.svg
+categoria-primera-a.svg
+liga-1-peru.svg
+ligapro-serie-a.svg
+division-profesional-bolivia.svg
+liga-futve.svg
+```
 
-## Licença
+Tambem sao aceitos `.png` e `.webp`.
 
-Este projeto é licenciado sob a Licença Pública Geral GNU v3.0 - veja o arquivo [LICENSE](./LICENSE) para mais detalhes.
+## Popular Times
 
+O seed de times usa paginas publicas de temporada da Wikipedia como fonte auditavel, uma por liga. Isso evita os limites de temporada da API-Football no plano gratis e tambem evita o retorno parcial de 10 clubes da TheSportsDB.
+
+O script valida a quantidade esperada de clubes antes de cadastrar. Se a pagina retornar menos ou mais clubes do que o esperado, a liga e ignorada para evitar dados errados.
+
+O script preenche:
+
+- `teams.name`: titulo do artigo do clube quando disponivel, geralmente mais proximo do nome oficial.
+- `teams.short_name`: nome exibido na tabela da temporada, geralmente o nome mais conhecido.
+- `teams.city`: cidade/localidade quando a tabela informa.
+- `teams.stadium`: estadio quando a tabela informa.
+- `teams.founded_year`: fica vazio por enquanto.
+- `teams.logo_url`: fica vazio por enquanto.
+
+Antes de rodar, execute o SQL atualizado em `supabase/schema.sql`, pois ele cria o indice unico `teams(league_id, name)`.
+
+Depois rode:
+
+```bash
+npm run seed:countries
+npm run seed:leagues
+npm run seed:teams
+```
+
+O script verifica os times ja cadastrados por liga e ignora os existentes para evitar duplicacao. Se uma fonte retornar lista incompleta ou com times demais, a liga e ignorada e o terminal mostra o motivo.
+
+Para testar a extracao sem gravar no Supabase:
+
+```bash
+SEED_TEAMS_DRY_RUN=1 npm run seed:teams
+```
+
+No PowerShell:
+
+```powershell
+$env:SEED_TEAMS_DRY_RUN = "1"
+npm run seed:teams
+```
+
+## Estrutura
+
+```txt
+src/
+  app/
+  components/
+  lib/supabase/
+  services/
+  types/
+supabase/
+  schema.sql
+legacy/
+  frontend/
+  backend/
+  database/
+```
+
+## Legado
+
+A estrutura antiga em Vue.js, Node/Express e Docker/MySQL foi movida para `legacy/` para preservar referencia historica sem misturar com a nova stack.
+
+## Licenca
+
+Este projeto e licenciado sob a Licenca Publica Geral GNU v3.0. Veja [LICENSE](./LICENSE).
