@@ -3,7 +3,10 @@ import { SetupNotice } from "@/components/ui/SetupNotice";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { getCountries } from "@/services/countries";
 import { getLeagues } from "@/services/leagues";
+import { getPlayers } from "@/services/players";
+import { getSeasons } from "@/services/seasons";
 import { getTeams } from "@/services/teams";
+import { getTransfers } from "@/services/transfers";
 
 export const dynamic = "force-dynamic";
 
@@ -25,13 +28,38 @@ const sections = [
     title: "Times",
     description: "Clubes do modo carreira com liga, pais, estadio e ficha publica.",
     action: "Ver times"
+  },
+  {
+    href: "/seasons",
+    title: "Temporadas",
+    description: "Anos do save usados para elencos e transferencias manuais.",
+    action: "Gerenciar temporadas"
+  },
+  {
+    href: "/players",
+    title: "Jogadores",
+    description: "Atletas cadastrados manualmente, sem time atual salvo em players.",
+    action: "Ver jogadores"
+  },
+  {
+    href: "/transfers",
+    title: "Transferencias",
+    description: "Movimentacoes manuais com data do universo do modo carreira.",
+    action: "Ver transferencias"
   }
 ];
 
 export default async function HomePage() {
-  const [countries, leagues, teams] = isSupabaseConfigured()
-    ? await Promise.all([getCountries(), getLeagues(), getTeams()])
-    : [[], [], []];
+  const [countries, leagues, teams, seasons, players, transfers] = isSupabaseConfigured()
+    ? await Promise.all([
+        getCountries(),
+        getLeagues(),
+        getTeams(),
+        getSeasons(),
+        getPlayers(),
+        getTransfers()
+      ])
+    : [[], [], [], [], [], []];
 
   return (
     <div className="space-y-8">
@@ -48,9 +76,8 @@ export default async function HomePage() {
                 FCMarkt
               </h1>
               <p className="max-w-3xl text-lg leading-8 text-slate-700">
-                Um catalogo simples para estruturar paises, ligas e clubes do seu modo carreira
-                FIFA/EA FC. O MVP concentra a base publica do projeto: onde cada time joga, a
-                qual liga pertence e quais informacoes essenciais ja foram cadastradas.
+                Um catalogo simples para estruturar paises, ligas, clubes, temporadas, jogadores
+                e transferencias manuais do seu modo carreira FIFA/EA FC.
               </p>
             </div>
           </div>
@@ -62,18 +89,21 @@ export default async function HomePage() {
               Explorar times
             </Link>
             <Link
-              href="/leagues"
+              href="/players"
               className="rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 hover:bg-slate-50"
             >
-              Ver ligas
+              Ver jogadores
             </Link>
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-2">
           <Metric label="Paises" value={countries.length} />
           <Metric label="Ligas" value={leagues.length} />
           <Metric label="Times" value={teams.length} />
+          <Metric label="Temporadas" value={seasons.length} />
+          <Metric label="Jogadores" value={players.length} />
+          <Metric label="Transferencias" value={transfers.length} />
         </div>
       </section>
 
@@ -96,12 +126,12 @@ export default async function HomePage() {
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-950">Escopo do MVP</h2>
+        <h2 className="text-lg font-semibold text-slate-950">Escopo atual</h2>
         <div className="mt-4 grid gap-3 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-md bg-slate-50 p-4">Cadastro de paises, ligas e times</div>
           <div className="rounded-md bg-slate-50 p-4">Logos via Supabase Storage</div>
-          <div className="rounded-md bg-slate-50 p-4">Paginas publicas de liga e clube</div>
-          <div className="rounded-md bg-slate-50 p-4">Seeds para iniciar a base do catalogo</div>
+          <div className="rounded-md bg-slate-50 p-4">Jogadores sem time atual fixo</div>
+          <div className="rounded-md bg-slate-50 p-4">Elencos e transferencias por temporada</div>
         </div>
       </section>
     </div>

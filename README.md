@@ -2,7 +2,7 @@
 
 FCMarkt e uma aplicacao para organizar dados de modo carreira FIFA/EA FC, inspirada no Transfermarkt. O projeto foi refatorado para Next.js + Supabase, mantendo a versao antiga em `legacy/` apenas como referencia historica.
 
-O MVP atual foca somente em paises, ligas e times. Jogadores, elencos, transferencias, valores de mercado, login e permissoes ficam fora deste escopo inicial.
+O MVP inicial focava em paises, ligas e times. A Fase 2 adiciona temporadas, jogadores, elencos por temporada e transferencias manuais, ainda sem login, scraping, APIs externas ou importacao automatica de jogadores.
 
 ## Stack
 
@@ -22,6 +22,11 @@ O MVP atual foca somente em paises, ligas e times. Jogadores, elencos, transfere
 - Logos de ligas a partir de arquivos locais enviados para `league-logos`
 - Paginas publicas de detalhes de ligas e times
 - Seeds para paises, ligas e times
+- Listagem e cadastro de temporadas
+- Listagem, cadastro e perfil de jogadores
+- Vinculos de elenco por temporada na pagina do time
+- Listagem e cadastro manual de transferencias
+- Testes de regras de negocio com Vitest
 
 ## Configuracao local
 
@@ -73,6 +78,10 @@ Tabelas criadas pelo schema:
 - `countries`: paises, codigo e bandeira
 - `leagues`: ligas vinculadas a paises
 - `teams`: times vinculados a ligas
+- `seasons`: temporadas do universo do modo carreira
+- `players`: jogadores cadastrados manualmente, sem `team_id` fixo
+- `squad_memberships`: vinculos de jogadores com times por temporada
+- `transfers`: transferencias manuais com data do modo carreira
 
 Buckets publicos usados:
 
@@ -87,10 +96,40 @@ O schema tambem cria indices para buscas por relacionamento e indices unicos par
 npm run dev
 npm run lint
 npm run build
+npm run test
 npm run seed:countries
 npm run seed:leagues
 npm run seed:teams
 ```
+
+## Rotas principais
+
+- `/countries` e `/countries/new`
+- `/leagues`, `/leagues/new` e `/leagues/[id]`
+- `/teams`, `/teams/new` e `/teams/[id]`
+- `/seasons` e `/seasons/new`
+- `/players`, `/players/new` e `/players/[id]`
+- `/transfers` e `/transfers/new`
+
+## Regras da Fase 2
+
+- Um jogador pode existir sem time atual.
+- O time atual do jogador nao e salvo em `players`.
+- O time atual e derivado do vinculo de elenco mais recente ou da transferencia mais recente.
+- Elencos sao consultaveis por temporada.
+- Transferencias exigem jogador, destino, temporada e data manual.
+- `from_team_id` e `fee` podem ser nulos.
+- Esta fase nao implementa scraping, API externa, importacao automatica de jogadores ou upload de foto de jogador.
+
+## Testes
+
+Os testes usam Vitest e ficam em `src/tests/`.
+
+```bash
+npm run test
+```
+
+Os testes atuais protegem validacoes de temporadas, jogadores, elencos, transferencias, ordenacao por data e a regra de nao salvar `team_id` em `players`.
 
 ## Seeds
 
@@ -168,7 +207,8 @@ src/
   app/                 Rotas do App Router
   components/          Componentes de UI e formularios
   lib/supabase/        Helpers de configuracao Supabase
-  services/            Acesso a dados de paises, ligas e times
+  services/            Acesso a dados e regras de negocio
+  tests/               Testes de regras de negocio
   types/               Tipos do banco e formularios
 scripts/               Seeds
 supabase/

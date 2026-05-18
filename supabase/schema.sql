@@ -36,6 +36,72 @@ create unique index if not exists countries_code_unique_idx on countries(code);
 create unique index if not exists leagues_country_id_name_unique_idx on leagues(country_id, name);
 create unique index if not exists teams_league_id_name_unique_idx on teams(league_id, name);
 
+create table if not exists seasons (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  start_year int not null,
+  end_year int not null,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now(),
+  constraint seasons_years_check check (end_year >= start_year)
+);
+
+create table if not exists players (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  known_name text,
+  nationality text,
+  birth_date date,
+  main_position text,
+  overall int,
+  potential int,
+  photo_url text,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now(),
+  constraint players_overall_check check (overall is null or (overall >= 1 and overall <= 99)),
+  constraint players_potential_check check (potential is null or (potential >= 1 and potential <= 99))
+);
+
+create table if not exists squad_memberships (
+  id uuid primary key default gen_random_uuid(),
+  player_id uuid not null references players(id) on delete cascade,
+  team_id uuid not null references teams(id) on delete cascade,
+  season_id uuid not null references seasons(id) on delete cascade,
+  shirt_number int,
+  joined_at date,
+  left_at date,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now(),
+  constraint squad_memberships_dates_check check (left_at is null or joined_at is null or left_at >= joined_at),
+  constraint squad_memberships_shirt_number_check check (shirt_number is null or (shirt_number >= 1 and shirt_number <= 99))
+);
+
+create table if not exists transfers (
+  id uuid primary key default gen_random_uuid(),
+  player_id uuid not null references players(id) on delete cascade,
+  from_team_id uuid references teams(id) on delete set null,
+  to_team_id uuid not null references teams(id) on delete cascade,
+  season_id uuid not null references seasons(id) on delete cascade,
+  transfer_date date not null,
+  fee numeric,
+  transfer_type text not null,
+  notes text,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now(),
+  constraint transfers_type_check check (transfer_type in ('permanent', 'loan', 'free', 'youth', 'release')),
+  constraint transfers_fee_check check (fee is null or fee >= 0)
+);
+
+create index if not exists squad_memberships_player_id_idx on squad_memberships(player_id);
+create index if not exists squad_memberships_team_id_idx on squad_memberships(team_id);
+create index if not exists squad_memberships_season_id_idx on squad_memberships(season_id);
+create index if not exists transfers_player_id_idx on transfers(player_id);
+create index if not exists transfers_from_team_id_idx on transfers(from_team_id);
+create index if not exists transfers_to_team_id_idx on transfers(to_team_id);
+create index if not exists transfers_season_id_idx on transfers(season_id);
+create index if not exists transfers_transfer_date_idx on transfers(transfer_date desc);
+create unique index if not exists seasons_name_unique_idx on seasons(name);
+
 insert into storage.buckets (id, name, public)
 values ('team-logos', 'team-logos', true)
 on conflict (id) do update set public = true;

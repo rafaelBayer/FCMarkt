@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "lint": "eslint .",
+    "test": "vitest run",
     "seed:countries": "node scripts/seed-countries.mjs",
     "seed:leagues": "node scripts/seed-leagues.mjs",
     "seed:teams": "node scripts/seed-teams.mjs"
@@ -27,6 +28,7 @@
     "eslint": "^9.28.0",
     "eslint-config-next": "^15.3.3",
     "tailwindcss": "^4.1.8",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.6"
   }
 }
