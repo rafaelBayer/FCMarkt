@@ -6,9 +6,15 @@ import { initialFormState, type FormState } from "@/types/forms";
 
 type SeasonFormProps = {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
+  initialValues?: {
+    name?: string | null;
+    start_year?: number | null;
+    end_year?: number | null;
+  };
+  submitLabel?: string;
 };
 
-export function SeasonForm({ action }: SeasonFormProps) {
+export function SeasonForm({ action, initialValues, submitLabel = "Salvar temporada" }: SeasonFormProps) {
   const [state, formAction, pending] = useActionState(action, initialFormState);
 
   return (
@@ -22,6 +28,7 @@ export function SeasonForm({ action }: SeasonFormProps) {
         <input
           required
           name="name"
+          defaultValue={initialValues?.name ?? ""}
           placeholder="2029/30"
           className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
         />
@@ -34,6 +41,7 @@ export function SeasonForm({ action }: SeasonFormProps) {
             required
             name="startYear"
             type="number"
+            defaultValue={initialValues?.start_year ?? ""}
             min={1900}
             max={2200}
             placeholder="2029"
@@ -47,6 +55,7 @@ export function SeasonForm({ action }: SeasonFormProps) {
             required
             name="endYear"
             type="number"
+            defaultValue={initialValues?.end_year ?? ""}
             min={1900}
             max={2200}
             placeholder="2030"
@@ -60,7 +69,7 @@ export function SeasonForm({ action }: SeasonFormProps) {
         disabled={pending}
         className="w-fit rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
-        {pending ? "Salvando..." : "Salvar temporada"}
+        {pending ? "Salvando..." : submitLabel}
       </button>
     </form>
   );

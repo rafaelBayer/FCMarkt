@@ -73,3 +73,22 @@ export async function createSquadMembership(input: SquadMembershipInput) {
     throw new Error(`Erro ao cadastrar vinculo de elenco: ${error.message}`);
   }
 }
+
+export async function updateSquadMembership(id: string, input: SquadMembershipInput) {
+  const row = normalizeSquadMembershipInput(input);
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.from("squad_memberships").update(row).eq("id", id);
+
+  if (error) {
+    throw new Error(`Erro ao atualizar vinculo de elenco: ${error.message}`);
+  }
+}
+
+export async function deleteSquadMembership(id: string) {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.from("squad_memberships").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(`Erro ao excluir vinculo de elenco: ${error.message}`);
+  }
+}

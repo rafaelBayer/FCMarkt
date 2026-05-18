@@ -4,6 +4,8 @@ FCMarkt e uma aplicacao para organizar dados de modo carreira FIFA/EA FC, inspir
 
 O MVP inicial focava em paises, ligas e times. A Fase 2 adiciona temporadas, jogadores, elencos por temporada e transferencias manuais, ainda sem login, scraping, APIs externas ou importacao automatica de jogadores.
 
+A Fase 3 adiciona administracao basica: edicao, exclusao segura, diagnostico de duplicados e regras de integridade para proteger o historico do modo carreira.
+
 ## Stack
 
 - Next.js com App Router
@@ -27,6 +29,9 @@ O MVP inicial focava em paises, ligas e times. A Fase 2 adiciona temporadas, jog
 - Vinculos de elenco por temporada na pagina do time
 - Listagem e cadastro manual de transferencias
 - Testes de regras de negocio com Vitest
+- Edicao de registros principais
+- Exclusao segura com confirmacao visual
+- Diagnostico simples de times duplicados em `/admin/duplicates`
 
 ## Configuracao local
 
@@ -90,6 +95,15 @@ Buckets publicos usados:
 
 O schema tambem cria indices para buscas por relacionamento e indices unicos para evitar duplicacoes basicas.
 
+Constraints contra duplicidade:
+
+- `countries(code)`
+- `leagues(country_id, name)`
+- `teams(league_id, name)`
+- `seasons(name)`
+- `squad_memberships(player_id, team_id, season_id)`
+- `players(name, birth_date)`, somente quando `birth_date` existir
+
 ## Scripts
 
 ```bash
@@ -110,6 +124,8 @@ npm run seed:teams
 - `/seasons` e `/seasons/new`
 - `/players`, `/players/new` e `/players/[id]`
 - `/transfers` e `/transfers/new`
+- paginas de edicao em `/countries/[id]/edit`, `/leagues/[id]/edit`, `/teams/[id]/edit`, `/players/[id]/edit`, `/seasons/[id]/edit` e `/transfers/[id]/edit`
+- `/admin/duplicates`
 
 ## Regras da Fase 2
 
@@ -130,6 +146,21 @@ npm run test
 ```
 
 Os testes atuais protegem validacoes de temporadas, jogadores, elencos, transferencias, ordenacao por data e a regra de nao salvar `team_id` em `players`.
+
+## Exclusao segura
+
+A interface nao usa exclusao em cascata para apagar historico. Antes de excluir, o sistema pede confirmacao visual e verifica se o registro pode ser removido.
+
+Regras principais:
+
+- Pais so pode ser excluido se nao possuir ligas.
+- Liga so pode ser excluida se nao possuir times.
+- Time so pode ser excluido se nao possuir elenco ou transferencias vinculadas.
+- Jogador so pode ser excluido se nao possuir elenco ou transferencias.
+- Temporada so pode ser excluida se nao possuir elenco ou transferencias.
+- Transferencias e vinculos de elenco podem ser excluidos com confirmacao visual.
+
+Quando um registro nao pode ser excluido, a interface mostra uma mensagem explicando o motivo.
 
 ## Seeds
 

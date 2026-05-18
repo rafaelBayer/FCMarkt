@@ -6,9 +6,15 @@ import { StatusMessage } from "@/components/ui/StatusMessage";
 
 type CountryFormProps = {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
+  initialValues?: {
+    name?: string | null;
+    code?: string | null;
+    flag_url?: string | null;
+  };
+  submitLabel?: string;
 };
 
-export function CountryForm({ action }: CountryFormProps) {
+export function CountryForm({ action, initialValues, submitLabel = "Salvar pais" }: CountryFormProps) {
   const [state, formAction, pending] = useActionState(action, initialFormState);
 
   return (
@@ -21,6 +27,7 @@ export function CountryForm({ action }: CountryFormProps) {
         <input
           required
           name="name"
+          defaultValue={initialValues?.name ?? ""}
           placeholder="Brazil"
           className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
         />
@@ -30,8 +37,18 @@ export function CountryForm({ action }: CountryFormProps) {
         <input
           name="code"
           maxLength={3}
+          defaultValue={initialValues?.code ?? ""}
           placeholder="BR"
           className="rounded-md border border-slate-300 px-3 py-2 uppercase text-slate-950 outline-none focus:border-teal-700"
+        />
+      </label>
+      <label className="grid gap-2 text-sm font-medium text-slate-800">
+        URL da bandeira
+        <input
+          name="flagUrl"
+          defaultValue={initialValues?.flag_url ?? ""}
+          placeholder="https://..."
+          className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
         />
       </label>
       <button
@@ -39,7 +56,7 @@ export function CountryForm({ action }: CountryFormProps) {
         disabled={pending}
         className="w-fit rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
-        {pending ? "Salvando..." : "Salvar pais"}
+        {pending ? "Salvando..." : submitLabel}
       </button>
     </form>
   );

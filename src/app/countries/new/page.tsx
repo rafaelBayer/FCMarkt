@@ -13,7 +13,8 @@ async function createCountryAction(_: FormState, formData: FormData): Promise<Fo
   try {
     await createCountry({
       name: String(formData.get("name") ?? ""),
-      code: String(formData.get("code") ?? "")
+      code: String(formData.get("code") ?? ""),
+      flagUrl: String(formData.get("flagUrl") ?? "")
     });
   } catch (error) {
     return {

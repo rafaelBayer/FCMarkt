@@ -1,12 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ActionLink } from "@/components/ui/ActionLink";
+import { DeleteButton } from "@/components/ui/DeleteButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LogoBox } from "@/components/ui/LogoBox";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SetupNotice } from "@/components/ui/SetupNotice";
+import { StatusMessage } from "@/components/ui/StatusMessage";
+import { assertConfirmed } from "@/services/admin-rules";
+import { getErrorMessage } from "@/lib/errors";
 import { formatDate, formatMoney } from "@/lib/format";
+import { redirectWithMessage } from "@/lib/action-redirects";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
-import { getPlayerProfile } from "@/services/players";
+import { deletePlayer, getPlayerProfile } from "@/services/players";
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +20,32 @@ type PlayerDetailsPageProps = {
   params: Promise<{
     id: string;
   }>;
+  searchParams?: Promise<{
+    error?: string;
+  }>;
 };
 
-export default async function PlayerDetailsPage({ params }: PlayerDetailsPageProps) {
+async function deletePlayerAction(formData: FormData) {
+  "use server";
+
+  const id = String(formData.get("id") ?? "");
+  let errorMessage: string | null = null;
+
+  try {
+    assertConfirmed(formData.get("confirmed") === "1", "jogador");
+    await deletePlayer(id);
+  } catch (error) {
+    errorMessage = getErrorMessage(error, "Nao foi possivel excluir o jogador.");
+  }
+
+  if (errorMessage) {
+    redirectWithMessage(`/players/${id}`, "error", errorMessage);
+  }
+
+  redirectWithMessage("/players", "deleted", "Jogador excluido com sucesso.");
+}
+
+export default async function PlayerDetailsPage({ params, searchParams }: PlayerDetailsPageProps) {
   if (!isSupabaseConfigured()) {
     return (
       <div>
@@ -27,6 +56,7 @@ export default async function PlayerDetailsPage({ params }: PlayerDetailsPagePro
   }
 
   const { id } = await params;
+  const query = await searchParams;
   const player = await getPlayerProfile(id);
 
   if (!player) {
@@ -41,6 +71,7 @@ export default async function PlayerDetailsPage({ params }: PlayerDetailsPagePro
         title={displayName}
         description="Perfil manual do jogador no universo do modo carreira."
       />
+      {query?.error ? <StatusMessage tone="error">{query.error}</StatusMessage> : null}
 
       <section className="grid gap-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-[180px_1fr]">
         <LogoBox src={player.photo_url} label={displayName} size="xl" />
@@ -64,6 +95,14 @@ export default async function PlayerDetailsPage({ params }: PlayerDetailsPagePro
             <Info label="Posicao" value={player.main_position} />
             <Info label="Overall / Potencial" value={`${player.overall ?? "-"} / ${player.potential ?? "-"}`} />
           </dl>
+          <div className="flex flex-wrap gap-2">
+            <ActionLink href={`/players/${player.id}/edit`}>Editar jogador</ActionLink>
+            <DeleteButton
+              id={player.id}
+              action={deletePlayerAction}
+              confirmMessage="Excluir este jogador? Esta acao so sera permitida se nao houver historico vinculado."
+            />
+          </div>
         </div>
       </section>
 
