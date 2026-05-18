@@ -1,14 +1,17 @@
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ActionLink } from "@/components/ui/ActionLink";
 import { DeleteButton } from "@/components/ui/DeleteButton";
+import { ListingFilters } from "@/components/ui/ListingFilters";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Pagination } from "@/components/ui/Pagination";
+import { SearchInput } from "@/components/ui/SearchInput";
 import { SetupNotice } from "@/components/ui/SetupNotice";
 import { StatusMessage } from "@/components/ui/StatusMessage";
 import { assertConfirmed } from "@/services/admin-rules";
 import { getErrorMessage } from "@/lib/errors";
 import { redirectWithMessage } from "@/lib/action-redirects";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
-import { deleteCountry, getCountries } from "@/services/countries";
+import { deleteCountry, getPaginatedCountries } from "@/services/countries";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +21,8 @@ type CountriesPageProps = {
     updated?: string;
     deleted?: string;
     error?: string;
+    page?: string;
+    search?: string;
   }>;
 };
 
@@ -43,7 +48,12 @@ async function deleteCountryAction(formData: FormData) {
 
 export default async function CountriesPage({ searchParams }: CountriesPageProps) {
   const params = await searchParams;
-  const countries = await getCountries();
+  const search = params?.search ?? "";
+  const countries = await getPaginatedCountries({
+    page: params?.page,
+    search
+  });
+  const hasActiveFilters = Boolean(search);
 
   return (
     <div>
@@ -61,44 +71,56 @@ export default async function CountriesPage({ searchParams }: CountriesPageProps
       {params?.deleted ? <StatusMessage tone="success">{params.deleted}</StatusMessage> : null}
       {params?.error ? <StatusMessage tone="error">{params.error}</StatusMessage> : null}
       {!isSupabaseConfigured() ? <SetupNotice /> : null}
-      {countries.length === 0 ? (
+
+      <ListingFilters action="/countries" clearHref="/countries" hasActiveFilters={hasActiveFilters}>
+        <SearchInput defaultValue={search} placeholder="Buscar por pais ou codigo" />
+      </ListingFilters>
+
+      {countries.data.length === 0 ? (
         <EmptyState
-          title="Nenhum pais cadastrado"
-          description="Comece criando o primeiro pais para liberar o cadastro de ligas."
+          title={hasActiveFilters ? "Nenhum pais encontrado" : "Nenhum pais cadastrado"}
+          description={
+            hasActiveFilters
+              ? "Ajuste ou limpe a busca para ver outros paises."
+              : "Comece criando o primeiro pais para liberar o cadastro de ligas."
+          }
           action={{ href: "/countries/new", label: "Criar pais" }}
         />
       ) : (
-        <div className="grid gap-3">
-          {countries.map((country) => (
-            <div
-              key={country.id}
-              className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-4"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-9 w-12 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-200 bg-slate-50">
-                  {country.flag_url ? (
-                    <img src={country.flag_url} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-xs font-semibold text-slate-400">--</span>
-                  )}
+        <div className="grid gap-4">
+          <div className="grid gap-3">
+            {countries.data.map((country) => (
+              <div
+                key={country.id}
+                className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-4"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-9 w-12 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-200 bg-slate-50">
+                    {country.flag_url ? (
+                      <img src={country.flag_url} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-xs font-semibold text-slate-400">--</span>
+                    )}
+                  </div>
+                  <span className="truncate font-semibold text-slate-950">{country.name}</span>
                 </div>
-                <span className="truncate font-semibold text-slate-950">{country.name}</span>
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                  {country.code ? (
+                    <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
+                      {country.code}
+                    </span>
+                  ) : null}
+                  <ActionLink href={`/countries/${country.id}/edit`}>Editar</ActionLink>
+                  <DeleteButton
+                    id={country.id}
+                    action={deleteCountryAction}
+                    confirmMessage="Excluir este pais? Esta acao so sera permitida se nao houver ligas vinculadas."
+                  />
+                </div>
               </div>
-              <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-                {country.code ? (
-                  <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
-                    {country.code}
-                  </span>
-                ) : null}
-                <ActionLink href={`/countries/${country.id}/edit`}>Editar</ActionLink>
-                <DeleteButton
-                  id={country.id}
-                  action={deleteCountryAction}
-                  confirmMessage="Excluir este pais? Esta acao so sera permitida se nao houver ligas vinculadas."
-                />
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          <Pagination result={countries} basePath="/countries" params={{ search }} />
         </div>
       )}
     </div>

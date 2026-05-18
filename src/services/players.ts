@@ -8,8 +8,22 @@ import {
   normalizePlayerInput,
   type PlayerInput
 } from "@/services/phase2-rules";
+import {
+  buildPaginatedResult,
+  emptyPaginatedResult,
+  normalizePagination,
+  type PaginatedResult,
+  type PaginationParams
+} from "@/services/pagination";
 
 export type { PlayerInput };
+
+export const PLAYERS_PAGE_SIZE = 50;
+
+export type PlayerListParams = PaginationParams & {
+  position?: string | null;
+  nationality?: string | null;
+};
 
 export async function getPlayers(): Promise<Player[]> {
   if (!isSupabaseConfigured()) {
@@ -24,6 +38,50 @@ export async function getPlayers(): Promise<Player[]> {
   }
 
   return data ?? [];
+}
+
+export async function getPaginatedPlayers(
+  params: PlayerListParams = {}
+): Promise<PaginatedResult<Player>> {
+  if (!isSupabaseConfigured()) {
+    return emptyPaginatedResult(params, PLAYERS_PAGE_SIZE);
+  }
+
+  const pagination = normalizePagination(params, PLAYERS_PAGE_SIZE);
+  const position = params.position?.trim();
+  const nationality = params.nationality?.trim();
+  const supabase = await createSupabaseServerClient();
+  let query = supabase
+    .from("players")
+    .select("*", { count: "exact" })
+    .order("name")
+    .range(pagination.from, pagination.to);
+
+  if (pagination.search) {
+    const search = escapeSupabaseLike(pagination.search);
+    query = query.or(`name.ilike.%${search}%,known_name.ilike.%${search}%`);
+  }
+
+  if (position) {
+    query = query.ilike("main_position", position);
+  }
+
+  if (nationality) {
+    query = query.ilike("nationality", `%${escapeSupabaseLike(nationality)}%`);
+  }
+
+  const { data, count, error } = await query;
+
+  if (error) {
+    throw new Error(`Erro ao buscar jogadores: ${error.message}`);
+  }
+
+  return buildPaginatedResult({
+    data: data ?? [],
+    count,
+    page: pagination.page,
+    pageSize: pagination.pageSize
+  });
 }
 
 export async function getPlayerById(id: string): Promise<Player | null> {
@@ -127,4 +185,8 @@ export async function deletePlayer(id: string) {
   if (error) {
     throw new Error(`Erro ao excluir jogador: ${error.message}`);
   }
+}
+
+function escapeSupabaseLike(value: string) {
+  return value.replace(/[%_]/g, "\\$&");
 }

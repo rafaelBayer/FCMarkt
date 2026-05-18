@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { SetupNotice } from "@/components/ui/SetupNotice";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
-import { getCountries } from "@/services/countries";
-import { getLeagues } from "@/services/leagues";
-import { getPlayers } from "@/services/players";
-import { getSeasons } from "@/services/seasons";
-import { getTeams } from "@/services/teams";
-import { getTransfers } from "@/services/transfers";
+import { getPaginatedCountries } from "@/services/countries";
+import { getPaginatedLeagues } from "@/services/leagues";
+import { getPaginatedPlayers } from "@/services/players";
+import { getPaginatedSeasons } from "@/services/seasons";
+import { getPaginatedTeams } from "@/services/teams";
+import { getPaginatedTransfers } from "@/services/transfers";
 
 export const dynamic = "force-dynamic";
 
@@ -52,14 +52,21 @@ const sections = [
 export default async function HomePage() {
   const [countries, leagues, teams, seasons, players, transfers] = isSupabaseConfigured()
     ? await Promise.all([
-        getCountries(),
-        getLeagues(),
-        getTeams(),
-        getSeasons(),
-        getPlayers(),
-        getTransfers()
+        getPaginatedCountries({ pageSize: 1 }),
+        getPaginatedLeagues({ pageSize: 1 }),
+        getPaginatedTeams({ pageSize: 1 }),
+        getPaginatedSeasons({ pageSize: 1 }),
+        getPaginatedPlayers({ pageSize: 1 }),
+        getPaginatedTransfers({ pageSize: 1 })
       ])
-    : [[], [], [], [], [], []];
+    : [
+        { count: 0 },
+        { count: 0 },
+        { count: 0 },
+        { count: 0 },
+        { count: 0 },
+        { count: 0 }
+      ];
 
   return (
     <div className="space-y-8">
@@ -98,12 +105,12 @@ export default async function HomePage() {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-2">
-          <Metric label="Paises" value={countries.length} />
-          <Metric label="Ligas" value={leagues.length} />
-          <Metric label="Times" value={teams.length} />
-          <Metric label="Temporadas" value={seasons.length} />
-          <Metric label="Jogadores" value={players.length} />
-          <Metric label="Transferencias" value={transfers.length} />
+          <Metric label="Paises" value={countries.count} />
+          <Metric label="Ligas" value={leagues.count} />
+          <Metric label="Times" value={teams.count} />
+          <Metric label="Temporadas" value={seasons.count} />
+          <Metric label="Jogadores" value={players.count} />
+          <Metric label="Transferencias" value={transfers.count} />
         </div>
       </section>
 

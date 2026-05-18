@@ -2,15 +2,20 @@ import Link from "next/link";
 import { ActionLink } from "@/components/ui/ActionLink";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { FilterSelect } from "@/components/ui/FilterSelect";
+import { ListingFilters } from "@/components/ui/ListingFilters";
 import { LogoBox } from "@/components/ui/LogoBox";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Pagination } from "@/components/ui/Pagination";
+import { SearchInput } from "@/components/ui/SearchInput";
 import { SetupNotice } from "@/components/ui/SetupNotice";
 import { StatusMessage } from "@/components/ui/StatusMessage";
 import { assertConfirmed } from "@/services/admin-rules";
 import { getErrorMessage } from "@/lib/errors";
 import { redirectWithMessage } from "@/lib/action-redirects";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
-import { deleteLeague, getLeagues } from "@/services/leagues";
+import { getCountries } from "@/services/countries";
+import { deleteLeague, getPaginatedLeagues } from "@/services/leagues";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +25,9 @@ type LeaguesPageProps = {
     updated?: string;
     deleted?: string;
     error?: string;
+    page?: string;
+    search?: string;
+    country?: string;
   }>;
 };
 
@@ -45,7 +53,13 @@ async function deleteLeagueAction(formData: FormData) {
 
 export default async function LeaguesPage({ searchParams }: LeaguesPageProps) {
   const params = await searchParams;
-  const leagues = await getLeagues();
+  const search = params?.search ?? "";
+  const country = params?.country ?? "";
+  const [leagues, countries] = await Promise.all([
+    getPaginatedLeagues({ page: params?.page, search, country }),
+    getCountries()
+  ]);
+  const hasActiveFilters = Boolean(search || country);
 
   return (
     <div>
@@ -63,39 +77,57 @@ export default async function LeaguesPage({ searchParams }: LeaguesPageProps) {
       {params?.deleted ? <StatusMessage tone="success">{params.deleted}</StatusMessage> : null}
       {params?.error ? <StatusMessage tone="error">{params.error}</StatusMessage> : null}
       {!isSupabaseConfigured() ? <SetupNotice /> : null}
-      {leagues.length === 0 ? (
+
+      <ListingFilters action="/leagues" clearHref="/leagues" hasActiveFilters={hasActiveFilters}>
+        <SearchInput defaultValue={search} placeholder="Buscar liga" />
+        <FilterSelect
+          label="Pais"
+          name="country"
+          defaultValue={country}
+          options={countries.map((item) => ({ value: item.id, label: item.name }))}
+        />
+      </ListingFilters>
+
+      {leagues.data.length === 0 ? (
         <EmptyState
-          title="Nenhuma liga cadastrada"
-          description="Crie uma liga depois de cadastrar pelo menos um pais."
+          title={hasActiveFilters ? "Nenhuma liga encontrada" : "Nenhuma liga cadastrada"}
+          description={
+            hasActiveFilters
+              ? "Ajuste ou limpe a busca e os filtros para ver outras ligas."
+              : "Crie uma liga depois de cadastrar pelo menos um pais."
+          }
           action={{ href: "/leagues/new", label: "Criar liga" }}
         />
       ) : (
-        <div className="grid gap-3">
-          {leagues.map((league) => (
-            <div
-              key={league.id}
-              className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-teal-200 hover:shadow-md"
-            >
-              <Link href={`/leagues/${league.id}`} className="flex min-w-0 items-center gap-3">
-                <LogoBox src={league.logo_url} label={league.name} size="md" />
-                <div className="min-w-0">
-                  <h2 className="truncate font-semibold text-slate-950">{league.name}</h2>
-                  <p className="text-sm text-slate-600">
-                    {league.countries?.name ?? "Pais nao informado"}
-                  </p>
+        <div className="grid gap-4">
+          <div className="grid gap-3">
+            {leagues.data.map((league) => (
+              <div
+                key={league.id}
+                className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-teal-200 hover:shadow-md"
+              >
+                <Link href={`/leagues/${league.id}`} className="flex min-w-0 items-center gap-3">
+                  <LogoBox src={league.logo_url} label={league.name} size="md" />
+                  <div className="min-w-0">
+                    <h2 className="truncate font-semibold text-slate-950">{league.name}</h2>
+                    <p className="text-sm text-slate-600">
+                      {league.countries?.name ?? "Pais nao informado"}
+                    </p>
+                  </div>
+                </Link>
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  <ActionLink href={`/leagues/${league.id}`}>Ver times</ActionLink>
+                  <ActionLink href={`/leagues/${league.id}/edit`}>Editar</ActionLink>
+                  <DeleteButton
+                    id={league.id}
+                    action={deleteLeagueAction}
+                    confirmMessage="Excluir esta liga? Esta acao so sera permitida se nao houver times vinculados."
+                  />
                 </div>
-              </Link>
-              <div className="flex shrink-0 flex-wrap gap-2">
-                <ActionLink href={`/leagues/${league.id}`}>Ver times</ActionLink>
-                <ActionLink href={`/leagues/${league.id}/edit`}>Editar</ActionLink>
-                <DeleteButton
-                  id={league.id}
-                  action={deleteLeagueAction}
-                  confirmMessage="Excluir esta liga? Esta acao so sera permitida se nao houver times vinculados."
-                />
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          <Pagination result={leagues} basePath="/leagues" params={{ search, country }} />
         </div>
       )}
     </div>

@@ -2,6 +2,13 @@ import { createSupabaseServerClient, isSupabaseConfigured } from "@/lib/supabase
 import type { Season } from "@/types/database";
 import { canDeleteSeasonFromCounts, type DeleteCheck } from "@/services/admin-rules";
 import { normalizeSeasonInput, type SeasonInput } from "@/services/phase2-rules";
+import {
+  buildPaginatedResult,
+  emptyPaginatedResult,
+  normalizePagination,
+  type PaginatedResult,
+  type PaginationParams
+} from "@/services/pagination";
 
 export type { SeasonInput };
 
@@ -22,6 +29,40 @@ export async function getSeasons(): Promise<Season[]> {
   }
 
   return data ?? [];
+}
+
+export async function getPaginatedSeasons(
+  params: PaginationParams = {}
+): Promise<PaginatedResult<Season>> {
+  if (!isSupabaseConfigured()) {
+    return emptyPaginatedResult(params);
+  }
+
+  const pagination = normalizePagination(params);
+  const supabase = await createSupabaseServerClient();
+  let query = supabase
+    .from("seasons")
+    .select("*", { count: "exact" })
+    .order("start_year", { ascending: false })
+    .order("name")
+    .range(pagination.from, pagination.to);
+
+  if (pagination.search) {
+    query = query.ilike("name", `%${escapeSupabaseLike(pagination.search)}%`);
+  }
+
+  const { data, count, error } = await query;
+
+  if (error) {
+    throw new Error(`Erro ao buscar temporadas: ${error.message}`);
+  }
+
+  return buildPaginatedResult({
+    data: data ?? [],
+    count,
+    page: pagination.page,
+    pageSize: pagination.pageSize
+  });
 }
 
 export async function createSeason(input: SeasonInput) {
@@ -105,4 +146,8 @@ export async function deleteSeason(id: string) {
   if (error) {
     throw new Error(`Erro ao excluir temporada: ${error.message}`);
   }
+}
+
+function escapeSupabaseLike(value: string) {
+  return value.replace(/[%_]/g, "\\$&");
 }

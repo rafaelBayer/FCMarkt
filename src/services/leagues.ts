@@ -1,11 +1,22 @@
 import { createSupabaseServerClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import type { LeagueWithCountry } from "@/types/database";
 import { canDeleteLeagueFromCounts, type DeleteCheck } from "@/services/admin-rules";
+import {
+  buildPaginatedResult,
+  emptyPaginatedResult,
+  normalizePagination,
+  type PaginatedResult,
+  type PaginationParams
+} from "@/services/pagination";
 
 export type LeagueInput = {
   countryId: string;
   name: string;
   logoUrl?: string | null;
+};
+
+export type LeagueListParams = PaginationParams & {
+  country?: string | null;
 };
 
 export async function getLeagues(): Promise<LeagueWithCountry[]> {
@@ -24,6 +35,44 @@ export async function getLeagues(): Promise<LeagueWithCountry[]> {
   }
 
   return (data ?? []) as LeagueWithCountry[];
+}
+
+export async function getPaginatedLeagues(
+  params: LeagueListParams = {}
+): Promise<PaginatedResult<LeagueWithCountry>> {
+  if (!isSupabaseConfigured()) {
+    return emptyPaginatedResult(params);
+  }
+
+  const pagination = normalizePagination(params);
+  const country = params.country?.trim();
+  const supabase = await createSupabaseServerClient();
+  let query = supabase
+    .from("leagues")
+    .select("*, countries(*)", { count: "exact" })
+    .order("name")
+    .range(pagination.from, pagination.to);
+
+  if (pagination.search) {
+    query = query.ilike("name", `%${escapeSupabaseLike(pagination.search)}%`);
+  }
+
+  if (country) {
+    query = query.eq("country_id", country);
+  }
+
+  const { data, count, error } = await query;
+
+  if (error) {
+    throw new Error(`Erro ao buscar ligas: ${error.message}`);
+  }
+
+  return buildPaginatedResult({
+    data: (data ?? []) as LeagueWithCountry[],
+    count,
+    page: pagination.page,
+    pageSize: pagination.pageSize
+  });
 }
 
 export async function getLeagueById(id: string): Promise<LeagueWithCountry | null> {
@@ -114,4 +163,8 @@ export async function deleteLeague(id: string) {
   if (error) {
     throw new Error(`Erro ao excluir liga: ${error.message}`);
   }
+}
+
+function escapeSupabaseLike(value: string) {
+  return value.replace(/[%_]/g, "\\$&");
 }

@@ -8,6 +8,8 @@ A Fase 3 adiciona administracao basica: edicao, exclusao segura, diagnostico de 
 
 A Fase 4 inicia a importacao controlada de jogadores por CSV local, com dry run obrigatorio por padrao e suporte inicial ao dataset Kaggle EAFC26 Player Database.
 
+A Fase 4.1 adiciona paginacao server-side, busca e filtros basicos nas listagens para evitar leituras grandes no Supabase.
+
 ## Stack
 
 - Next.js com App Router
@@ -35,6 +37,7 @@ A Fase 4 inicia a importacao controlada de jogadores por CSV local, com dry run 
 - Exclusao segura com confirmacao visual
 - Diagnostico simples de times duplicados em `/admin/duplicates`
 - Analise e importacao controlada de jogadores por CSV local
+- Paginacao, busca e filtros nas principais listagens
 
 ## Configuracao local
 
@@ -156,6 +159,20 @@ npm run test
 Os testes atuais protegem validacoes de temporadas, jogadores, elencos, transferencias, ordenacao por data e a regra de nao salvar `team_id` em `players`.
 
 Tambem ha testes para parser, mapper e dry run do importador EAFC26.
+As regras de paginacao protegem as listagens contra consultas sem limite.
+
+## Listagens com paginacao
+
+As principais listagens usam paginacao server-side e refletem busca/filtros na URL:
+
+- `/players?page=1&search=&position=&nationality=`
+- `/teams?page=1&search=&league=&country=`
+- `/leagues?page=1&search=&country=`
+- `/countries?page=1&search=`
+- `/seasons?page=1&search=`
+- `/transfers?page=1&search=&season=&team=`
+
+Jogadores usam limite padrao de 50 registros por pagina. As demais listagens usam 20 registros por pagina.
 
 ## Importacao EAFC26 por CSV local
 

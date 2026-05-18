@@ -1,14 +1,17 @@
 import { ActionLink } from "@/components/ui/ActionLink";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ListingFilters } from "@/components/ui/ListingFilters";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Pagination } from "@/components/ui/Pagination";
+import { SearchInput } from "@/components/ui/SearchInput";
 import { SetupNotice } from "@/components/ui/SetupNotice";
 import { StatusMessage } from "@/components/ui/StatusMessage";
 import { assertConfirmed } from "@/services/admin-rules";
 import { getErrorMessage } from "@/lib/errors";
 import { redirectWithMessage } from "@/lib/action-redirects";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
-import { deleteSeason, getSeasons } from "@/services/seasons";
+import { deleteSeason, getPaginatedSeasons } from "@/services/seasons";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +21,8 @@ type SeasonsPageProps = {
     updated?: string;
     deleted?: string;
     error?: string;
+    page?: string;
+    search?: string;
   }>;
 };
 
@@ -43,7 +48,9 @@ async function deleteSeasonAction(formData: FormData) {
 
 export default async function SeasonsPage({ searchParams }: SeasonsPageProps) {
   const params = await searchParams;
-  const seasons = await getSeasons();
+  const search = params?.search ?? "";
+  const seasons = await getPaginatedSeasons({ page: params?.page, search });
+  const hasActiveFilters = Boolean(search);
 
   return (
     <div>
@@ -62,33 +69,44 @@ export default async function SeasonsPage({ searchParams }: SeasonsPageProps) {
       {params?.error ? <StatusMessage tone="error">{params.error}</StatusMessage> : null}
       {!isSupabaseConfigured() ? <SetupNotice /> : null}
 
-      {seasons.length === 0 ? (
+      <ListingFilters action="/seasons" clearHref="/seasons" hasActiveFilters={hasActiveFilters}>
+        <SearchInput defaultValue={search} placeholder="Buscar temporada" />
+      </ListingFilters>
+
+      {seasons.data.length === 0 ? (
         <EmptyState
-          title="Nenhuma temporada cadastrada"
-          description="Crie uma temporada para registrar elencos e transferencias do save."
+          title={hasActiveFilters ? "Nenhuma temporada encontrada" : "Nenhuma temporada cadastrada"}
+          description={
+            hasActiveFilters
+              ? "Ajuste ou limpe a busca para ver outras temporadas."
+              : "Crie uma temporada para registrar elencos e transferencias do save."
+          }
           action={{ href: "/seasons/new", label: "Criar temporada" }}
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {seasons.map((season) => (
-            <div key={season.id} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-normal text-slate-500">
-                Temporada
-              </p>
-              <h2 className="mt-2 text-xl font-bold text-slate-950">{season.name}</h2>
-              <p className="mt-1 text-sm text-slate-600">
-                {season.start_year} ate {season.end_year}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <ActionLink href={`/seasons/${season.id}/edit`}>Editar</ActionLink>
-                <DeleteButton
-                  id={season.id}
-                  action={deleteSeasonAction}
-                  confirmMessage="Excluir esta temporada? Esta acao so sera permitida se nao houver elencos ou transferencias vinculadas."
-                />
+        <div className="grid gap-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {seasons.data.map((season) => (
+              <div key={season.id} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-normal text-slate-500">
+                  Temporada
+                </p>
+                <h2 className="mt-2 text-xl font-bold text-slate-950">{season.name}</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  {season.start_year} ate {season.end_year}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <ActionLink href={`/seasons/${season.id}/edit`}>Editar</ActionLink>
+                  <DeleteButton
+                    id={season.id}
+                    action={deleteSeasonAction}
+                    confirmMessage="Excluir esta temporada? Esta acao so sera permitida se nao houver elencos ou transferencias vinculadas."
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          <Pagination result={seasons} basePath="/seasons" params={{ search }} />
         </div>
       )}
     </div>

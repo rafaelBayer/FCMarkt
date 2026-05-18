@@ -1,7 +1,11 @@
 import { ActionLink } from "@/components/ui/ActionLink";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { FilterSelect } from "@/components/ui/FilterSelect";
+import { ListingFilters } from "@/components/ui/ListingFilters";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Pagination } from "@/components/ui/Pagination";
+import { SearchInput } from "@/components/ui/SearchInput";
 import { SetupNotice } from "@/components/ui/SetupNotice";
 import { StatusMessage } from "@/components/ui/StatusMessage";
 import { assertConfirmed } from "@/services/admin-rules";
@@ -9,7 +13,9 @@ import { getErrorMessage } from "@/lib/errors";
 import { formatDate, formatMoney } from "@/lib/format";
 import { redirectWithMessage } from "@/lib/action-redirects";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
-import { deleteTransfer, getTransfers } from "@/services/transfers";
+import { getSeasons } from "@/services/seasons";
+import { getTeams } from "@/services/teams";
+import { deleteTransfer, getPaginatedTransfers } from "@/services/transfers";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +25,10 @@ type TransfersPageProps = {
     updated?: string;
     deleted?: string;
     error?: string;
+    page?: string;
+    search?: string;
+    season?: string;
+    team?: string;
   }>;
 };
 
@@ -44,7 +54,15 @@ async function deleteTransferAction(formData: FormData) {
 
 export default async function TransfersPage({ searchParams }: TransfersPageProps) {
   const params = await searchParams;
-  const transfers = await getTransfers();
+  const search = params?.search ?? "";
+  const season = params?.season ?? "";
+  const team = params?.team ?? "";
+  const [transfers, seasons, teams] = await Promise.all([
+    getPaginatedTransfers({ page: params?.page, search, season, team }),
+    getSeasons(),
+    getTeams()
+  ]);
+  const hasActiveFilters = Boolean(search || season || team);
 
   return (
     <div>
@@ -63,59 +81,91 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
       {params?.error ? <StatusMessage tone="error">{params.error}</StatusMessage> : null}
       {!isSupabaseConfigured() ? <SetupNotice /> : null}
 
-      {transfers.length === 0 ? (
+      <ListingFilters action="/transfers" clearHref="/transfers" hasActiveFilters={hasActiveFilters}>
+        <SearchInput defaultValue={search} placeholder="Buscar jogador" />
+        <FilterSelect
+          label="Temporada"
+          name="season"
+          defaultValue={season}
+          options={seasons.map((item) => ({ value: item.id, label: item.name }))}
+        />
+        <FilterSelect
+          label="Time"
+          name="team"
+          defaultValue={team}
+          options={teams.map((item) => ({
+            value: item.id,
+            label: item.short_name || item.name
+          }))}
+        />
+      </ListingFilters>
+
+      {transfers.data.length === 0 ? (
         <EmptyState
-          title="Nenhuma transferencia cadastrada"
-          description="Cadastre uma transferencia manual para iniciar o historico."
+          title={
+            hasActiveFilters ? "Nenhuma transferencia encontrada" : "Nenhuma transferencia cadastrada"
+          }
+          description={
+            hasActiveFilters
+              ? "Ajuste ou limpe a busca e os filtros para ver outras transferencias."
+              : "Cadastre uma transferencia manual para iniciar o historico."
+          }
           action={{ href: "/transfers/new", label: "Criar transferencia" }}
         />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-normal text-slate-500">
-                <tr>
-                  <th className="min-w-48 px-4 py-3">Jogador</th>
-                  <th className="min-w-40 px-4 py-3">Origem</th>
-                  <th className="min-w-40 px-4 py-3">Destino</th>
-                  <th className="min-w-32 px-4 py-3">Temporada</th>
-                  <th className="min-w-32 px-4 py-3">Data</th>
-                  <th className="min-w-28 px-4 py-3">Tipo</th>
-                  <th className="min-w-32 px-4 py-3">Valor</th>
-                  <th className="min-w-44 px-4 py-3">Acoes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {transfers.map((transfer) => (
-                  <tr key={transfer.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-semibold text-slate-950">
-                      {transfer.players?.known_name || transfer.players?.name || "Nao informado"}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {transfer.from_team?.short_name || transfer.from_team?.name || "Sem origem"}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {transfer.to_team?.short_name || transfer.to_team?.name || "Nao informado"}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">{transfer.seasons?.name ?? "Nao informado"}</td>
-                    <td className="px-4 py-3 text-slate-700">{formatDate(transfer.transfer_date)}</td>
-                    <td className="px-4 py-3 text-slate-700">{transfer.transfer_type}</td>
-                    <td className="px-4 py-3 text-slate-700">{formatMoney(transfer.fee)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-2">
-                        <ActionLink href={`/transfers/${transfer.id}/edit`}>Editar</ActionLink>
-                        <DeleteButton
-                          id={transfer.id}
-                          action={deleteTransferAction}
-                          confirmMessage="Excluir esta transferencia? O historico sera removido deste jogador."
-                        />
-                      </div>
-                    </td>
+        <div className="grid gap-4">
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-normal text-slate-500">
+                  <tr>
+                    <th className="min-w-48 px-4 py-3">Jogador</th>
+                    <th className="min-w-40 px-4 py-3">Origem</th>
+                    <th className="min-w-40 px-4 py-3">Destino</th>
+                    <th className="min-w-32 px-4 py-3">Temporada</th>
+                    <th className="min-w-32 px-4 py-3">Data</th>
+                    <th className="min-w-28 px-4 py-3">Tipo</th>
+                    <th className="min-w-32 px-4 py-3">Valor</th>
+                    <th className="min-w-44 px-4 py-3">Acoes</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {transfers.data.map((transfer) => (
+                    <tr key={transfer.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3 font-semibold text-slate-950">
+                        {transfer.players?.known_name || transfer.players?.name || "Nao informado"}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700">
+                        {transfer.from_team?.short_name || transfer.from_team?.name || "Sem origem"}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700">
+                        {transfer.to_team?.short_name || transfer.to_team?.name || "Nao informado"}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700">
+                        {transfer.seasons?.name ?? "Nao informado"}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700">
+                        {formatDate(transfer.transfer_date)}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700">{transfer.transfer_type}</td>
+                      <td className="px-4 py-3 text-slate-700">{formatMoney(transfer.fee)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-2">
+                          <ActionLink href={`/transfers/${transfer.id}/edit`}>Editar</ActionLink>
+                          <DeleteButton
+                            id={transfer.id}
+                            action={deleteTransferAction}
+                            confirmMessage="Excluir esta transferencia? O historico sera removido deste jogador."
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+          <Pagination result={transfers} basePath="/transfers" params={{ search, season, team }} />
         </div>
       )}
     </div>

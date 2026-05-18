@@ -2,6 +2,13 @@ import { randomUUID } from "crypto";
 import { createSupabaseServerClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import type { TeamWithLeague } from "@/types/database";
 import { canDeleteTeamFromCounts, type DeleteCheck } from "@/services/admin-rules";
+import {
+  buildPaginatedResult,
+  emptyPaginatedResult,
+  normalizePagination,
+  type PaginatedResult,
+  type PaginationParams
+} from "@/services/pagination";
 
 const TEAM_LOGOS_BUCKET = "team-logos";
 
@@ -14,6 +21,11 @@ export type TeamInput = {
   foundedYear?: number | null;
   description?: string | null;
   logoUrl?: string | null;
+};
+
+export type TeamListParams = PaginationParams & {
+  league?: string | null;
+  country?: string | null;
 };
 
 export async function getTeams(): Promise<TeamWithLeague[]> {
@@ -32,6 +44,51 @@ export async function getTeams(): Promise<TeamWithLeague[]> {
   }
 
   return (data ?? []) as TeamWithLeague[];
+}
+
+export async function getPaginatedTeams(
+  params: TeamListParams = {}
+): Promise<PaginatedResult<TeamWithLeague>> {
+  if (!isSupabaseConfigured()) {
+    return emptyPaginatedResult(params);
+  }
+
+  const pagination = normalizePagination(params);
+  const league = params.league?.trim();
+  const country = params.country?.trim();
+  const select = country ? "*, leagues!inner(*, countries(*))" : "*, leagues(*, countries(*))";
+  const supabase = await createSupabaseServerClient();
+  let query = supabase
+    .from("teams")
+    .select(select, { count: "exact" })
+    .order("name")
+    .range(pagination.from, pagination.to);
+
+  if (pagination.search) {
+    const search = escapeSupabaseLike(pagination.search);
+    query = query.or(`name.ilike.%${search}%,short_name.ilike.%${search}%`);
+  }
+
+  if (league) {
+    query = query.eq("league_id", league);
+  }
+
+  if (country) {
+    query = query.eq("leagues.country_id", country);
+  }
+
+  const { data, count, error } = await query;
+
+  if (error) {
+    throw new Error(`Erro ao buscar times: ${error.message}`);
+  }
+
+  return buildPaginatedResult({
+    data: (data ?? []) as TeamWithLeague[],
+    count,
+    page: pagination.page,
+    pageSize: pagination.pageSize
+  });
 }
 
 export async function getTeamById(id: string): Promise<TeamWithLeague | null> {
@@ -220,4 +277,8 @@ async function uploadTeamLogo(file: File) {
 function getSafeExtension(fileName: string) {
   const extension = fileName.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "");
   return extension || "png";
+}
+
+function escapeSupabaseLike(value: string) {
+  return value.replace(/[%_]/g, "\\$&");
 }

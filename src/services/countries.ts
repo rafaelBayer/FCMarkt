@@ -1,6 +1,13 @@
 import { createSupabaseServerClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import type { Country } from "@/types/database";
 import { canDeleteCountryFromCounts, type DeleteCheck } from "@/services/admin-rules";
+import {
+  buildPaginatedResult,
+  emptyPaginatedResult,
+  normalizePagination,
+  type PaginatedResult,
+  type PaginationParams
+} from "@/services/pagination";
 
 export type CountryInput = {
   name: string;
@@ -21,6 +28,40 @@ export async function getCountries(): Promise<Country[]> {
   }
 
   return data ?? [];
+}
+
+export async function getPaginatedCountries(
+  params: PaginationParams = {}
+): Promise<PaginatedResult<Country>> {
+  if (!isSupabaseConfigured()) {
+    return emptyPaginatedResult(params);
+  }
+
+  const pagination = normalizePagination(params);
+  const supabase = await createSupabaseServerClient();
+  let query = supabase
+    .from("countries")
+    .select("*", { count: "exact" })
+    .order("name")
+    .range(pagination.from, pagination.to);
+
+  if (pagination.search) {
+    const search = escapeSupabaseLike(pagination.search);
+    query = query.or(`name.ilike.%${search}%,code.ilike.%${search}%`);
+  }
+
+  const { data, count, error } = await query;
+
+  if (error) {
+    throw new Error(`Erro ao buscar paises: ${error.message}`);
+  }
+
+  return buildPaginatedResult({
+    data: data ?? [],
+    count,
+    page: pagination.page,
+    pageSize: pagination.pageSize
+  });
 }
 
 export async function getCountryById(id: string): Promise<Country | null> {
@@ -107,4 +148,8 @@ export async function deleteCountry(id: string) {
   if (error) {
     throw new Error(`Erro ao excluir pais: ${error.message}`);
   }
+}
+
+function escapeSupabaseLike(value: string) {
+  return value.replace(/[%_]/g, "\\$&");
 }

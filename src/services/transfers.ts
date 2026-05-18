@@ -7,12 +7,26 @@ import {
   type TransferInput,
   type TransferType
 } from "@/services/phase2-rules";
+import {
+  buildPaginatedResult,
+  emptyPaginatedResult,
+  normalizePagination,
+  type PaginatedResult,
+  type PaginationParams
+} from "@/services/pagination";
 
 export type { TransferInput, TransferType };
 export { TRANSFER_TYPES };
 
 const TRANSFER_SELECT =
   "*, players(*), seasons(*), from_team:teams!transfers_from_team_id_fkey(*), to_team:teams!transfers_to_team_id_fkey(*)";
+const TRANSFER_SEARCH_SELECT =
+  "*, players!inner(*), seasons(*), from_team:teams!transfers_from_team_id_fkey(*), to_team:teams!transfers_to_team_id_fkey(*)";
+
+export type TransferListParams = PaginationParams & {
+  season?: string | null;
+  team?: string | null;
+};
 
 export async function getTransfers(): Promise<TransferWithRelations[]> {
   if (!isSupabaseConfigured()) {
@@ -31,6 +45,50 @@ export async function getTransfers(): Promise<TransferWithRelations[]> {
   }
 
   return sortTransfersByDateDesc((data ?? []) as TransferWithRelations[]);
+}
+
+export async function getPaginatedTransfers(
+  params: TransferListParams = {}
+): Promise<PaginatedResult<TransferWithRelations>> {
+  if (!isSupabaseConfigured()) {
+    return emptyPaginatedResult(params);
+  }
+
+  const pagination = normalizePagination(params);
+  const season = params.season?.trim();
+  const team = params.team?.trim();
+  const supabase = await createSupabaseServerClient();
+  let query = supabase
+    .from("transfers")
+    .select(pagination.search ? TRANSFER_SEARCH_SELECT : TRANSFER_SELECT, { count: "exact" })
+    .order("transfer_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .range(pagination.from, pagination.to);
+
+  if (pagination.search) {
+    query = query.ilike("players.name", `%${escapeSupabaseLike(pagination.search)}%`);
+  }
+
+  if (season) {
+    query = query.eq("season_id", season);
+  }
+
+  if (team) {
+    query = query.or(`from_team_id.eq.${team},to_team_id.eq.${team}`);
+  }
+
+  const { data, count, error } = await query;
+
+  if (error) {
+    throw new Error(`Erro ao buscar transferencias: ${error.message}`);
+  }
+
+  return buildPaginatedResult({
+    data: sortTransfersByDateDesc((data ?? []) as TransferWithRelations[]),
+    count,
+    page: pagination.page,
+    pageSize: pagination.pageSize
+  });
 }
 
 export async function getTransfersByPlayerId(playerId: string): Promise<TransferWithRelations[]> {
@@ -103,4 +161,8 @@ export async function deleteTransfer(id: string) {
   if (error) {
     throw new Error(`Erro ao excluir transferencia: ${error.message}`);
   }
+}
+
+function escapeSupabaseLike(value: string) {
+  return value.replace(/[%_]/g, "\\$&");
 }
