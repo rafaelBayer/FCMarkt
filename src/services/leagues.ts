@@ -25,6 +25,29 @@ export async function getLeagues(): Promise<LeagueWithCountry[]> {
   return (data ?? []) as LeagueWithCountry[];
 }
 
+export async function getLeagueById(id: string): Promise<LeagueWithCountry | null> {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("leagues")
+    .select("*, countries(*)")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null;
+    }
+
+    throw new Error(`Erro ao buscar liga: ${error.message}`);
+  }
+
+  return data as LeagueWithCountry;
+}
+
 export async function createLeague(input: LeagueInput) {
   const name = input.name.trim();
   const country_id = input.countryId;

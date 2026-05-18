@@ -55,6 +55,26 @@ export async function getTeamById(id: string): Promise<TeamWithLeague | null> {
   return data as TeamWithLeague;
 }
 
+export async function getTeamsByLeagueId(leagueId: string): Promise<TeamWithLeague[]> {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("teams")
+    .select("*, leagues(*, countries(*))")
+    .eq("league_id", leagueId)
+    .order("short_name", { ascending: true, nullsFirst: false })
+    .order("name", { ascending: true });
+
+  if (error) {
+    throw new Error(`Erro ao buscar times da liga: ${error.message}`);
+  }
+
+  return (data ?? []) as TeamWithLeague[];
+}
+
 export async function createTeam(input: TeamInput, logo?: File | null) {
   const name = input.name.trim();
   const league_id = input.leagueId;

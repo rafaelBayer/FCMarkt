@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SetupNotice } from "@/components/ui/SetupNotice";
@@ -22,9 +23,10 @@ export default async function LeaguesPage() {
       ) : (
         <div className="grid gap-3">
           {leagues.map((league) => (
-            <div
+            <Link
               key={league.id}
-              className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-4"
+              href={`/leagues/${league.id}`}
+              className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-teal-200 hover:shadow-md"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-200 bg-slate-50">
@@ -35,13 +37,14 @@ export default async function LeaguesPage() {
                   )}
                 </div>
                 <div className="min-w-0">
-                <h2 className="font-semibold text-slate-950">{league.name}</h2>
-                <p className="text-sm text-slate-600">
-                  {league.countries?.name ?? "Pais nao informado"}
-                </p>
+                  <h2 className="font-semibold text-slate-950">{league.name}</h2>
+                  <p className="text-sm text-slate-600">
+                    {league.countries?.name ?? "Pais nao informado"}
+                  </p>
                 </div>
               </div>
-            </div>
+              <span className="shrink-0 text-sm font-semibold text-teal-700">Ver times</span>
+            </Link>
           ))}
         </div>
       )}
