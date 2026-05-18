@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LogoBox } from "@/components/ui/LogoBox";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SetupNotice } from "@/components/ui/SetupNotice";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
@@ -43,13 +44,7 @@ export default async function LeagueDetailsPage({ params }: LeagueDetailsPagePro
       />
 
       <section className="mb-6 grid gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-[72px_1fr_auto] sm:items-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-md border border-slate-200 bg-slate-50">
-          {league.logo_url ? (
-            <img src={league.logo_url} alt="" className="max-h-12 max-w-12 object-contain" />
-          ) : (
-            <span className="text-sm font-bold text-slate-400">{league.name.slice(0, 2)}</span>
-          )}
-        </div>
+        <LogoBox src={league.logo_url} label={league.name} size="lg" />
         <div>
           <p className="text-xs font-semibold uppercase tracking-normal text-slate-500">Competicao</p>
           <h2 className="mt-1 text-xl font-bold text-slate-950">{league.name}</h2>
@@ -62,7 +57,11 @@ export default async function LeagueDetailsPage({ params }: LeagueDetailsPagePro
       </section>
 
       {teams.length === 0 ? (
-        <EmptyState title="Nenhum time nesta liga" description="Cadastre times e vincule eles a esta liga." />
+        <EmptyState
+          title="Nenhum time nesta liga"
+          description="Cadastre times e vincule eles a esta liga para montar a tabela."
+          action={{ href: "/teams/new", label: "Criar time" }}
+        />
       ) : (
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
@@ -89,13 +88,7 @@ export default async function LeagueDetailsPage({ params }: LeagueDetailsPagePro
                       <td className="px-4 py-3 font-medium text-slate-500">{index + 1}</td>
                       <td className="px-4 py-3">
                         <Link href={`/teams/${team.id}`} className="flex min-w-0 items-center gap-3">
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded border border-slate-200 bg-white">
-                            {team.logo_url ? (
-                              <img src={team.logo_url} alt="" className="max-h-8 max-w-8 object-contain" />
-                            ) : (
-                              <span className="text-xs font-bold text-slate-400">{displayName.slice(0, 2)}</span>
-                            )}
-                          </span>
+                          <LogoBox src={team.logo_url} label={displayName} size="sm" />
                           <span className="font-semibold text-slate-950 hover:text-teal-700">{displayName}</span>
                         </Link>
                       </td>

@@ -1,6 +1,8 @@
 # FCMarkt
 
-FCMarkt e uma aplicacao para organizar dados de modo carreira FIFA/EA FC, inspirada no Transfermarkt. O MVP atual foca em paises, ligas e times, com upload de logos pelo Supabase Storage e paginas publicas de detalhes dos clubes.
+FCMarkt e uma aplicacao para organizar dados de modo carreira FIFA/EA FC, inspirada no Transfermarkt. O projeto foi refatorado para Next.js + Supabase, mantendo a versao antiga em `legacy/` apenas como referencia historica.
+
+O MVP atual foca somente em paises, ligas e times. Jogadores, elencos, transferencias, valores de mercado, login e permissoes ficam fora deste escopo inicial.
 
 ## Stack
 
@@ -9,18 +11,19 @@ FCMarkt e uma aplicacao para organizar dados de modo carreira FIFA/EA FC, inspir
 - Tailwind CSS
 - Supabase como backend
 - Supabase PostgreSQL como banco
-- Supabase Storage para logos dos times
+- Supabase Storage para logos
 
-## MVP
+## Funcionalidades do MVP
 
-- Cadastro de paises
-- Cadastro de ligas vinculadas a paises
-- Cadastro de times vinculados a ligas
-- Upload de logo dos times no bucket `team-logos`
-- Listagem de times
-- Pagina publica de detalhes do time
+- Listagem e cadastro de paises
+- Listagem e cadastro de ligas vinculadas a paises
+- Listagem e cadastro de times vinculados a ligas
+- Upload de logos de times para o bucket `team-logos`
+- Logos de ligas a partir de arquivos locais enviados para `league-logos`
+- Paginas publicas de detalhes de ligas e times
+- Seeds para paises, ligas e times
 
-## Como Rodar
+## Configuracao local
 
 1. Instale as dependencias:
 
@@ -28,20 +31,32 @@ FCMarkt e uma aplicacao para organizar dados de modo carreira FIFA/EA FC, inspir
    npm install
    ```
 
-2. Copie o arquivo de ambiente:
+2. Crie o arquivo `.env.local` a partir do exemplo:
 
    ```bash
    cp .env.example .env.local
    ```
 
-3. Preencha as variaveis:
+   No PowerShell:
+
+   ```powershell
+   Copy-Item .env.example .env.local
+   ```
+
+3. Preencha as variaveis no `.env.local`:
 
    ```env
    NEXT_PUBLIC_SUPABASE_URL=
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
    ```
 
-4. Crie as tabelas e o bucket no Supabase usando o SQL em `supabase/schema.sql`.
+   Nao versione chaves reais. O `.env.local` fica ignorado pelo Git.
+
+4. No Supabase SQL Editor, execute o arquivo:
+
+   ```txt
+   supabase/schema.sql
+   ```
 
 5. Rode o projeto:
 
@@ -50,6 +65,21 @@ FCMarkt e uma aplicacao para organizar dados de modo carreira FIFA/EA FC, inspir
    ```
 
 6. Acesse `http://localhost:3000`.
+
+## Banco e Storage
+
+Tabelas criadas pelo schema:
+
+- `countries`: paises, codigo e bandeira
+- `leagues`: ligas vinculadas a paises
+- `teams`: times vinculados a ligas
+
+Buckets publicos usados:
+
+- `team-logos`: logos de clubes
+- `league-logos`: logos de ligas
+
+O schema tambem cria indices para buscas por relacionamento e indices unicos para evitar duplicacoes basicas.
 
 ## Scripts
 
@@ -62,44 +92,33 @@ npm run seed:leagues
 npm run seed:teams
 ```
 
-## Popular Paises
+## Seeds
 
-O seed de paises usa a API REST Countries para buscar nome, sigla ISO-2 e bandeira.
+### Paises
 
-1. Rode o SQL atualizado em `supabase/schema.sql` no Supabase SQL Editor. Ele adiciona `countries.flag_url` e o indice unico por `countries.code`.
-2. Confirme que `.env.local` tem `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
-3. Execute:
+O seed de paises usa REST Countries para buscar nome, codigo ISO-2 e bandeira.
 
-   ```bash
-   npm run seed:countries
-   ```
+```bash
+npm run seed:countries
+```
 
-O script usa `upsert` por `code`, entao pode ser executado novamente para atualizar nomes e bandeiras sem duplicar paises.
+Ele usa `upsert` por `code`, entao pode ser executado novamente sem duplicar paises.
 
-## Popular Ligas
+### Ligas
 
 O seed de ligas cadastra uma lista curada de primeiras divisoes e vincula cada liga ao pais correspondente.
 
-1. Rode o SQL atualizado em `supabase/schema.sql` no Supabase SQL Editor. Ele cria o indice unico por `leagues.country_id + leagues.name` e o bucket publico `league-logos`.
-2. Execute o seed de paises antes, porque as ligas dependem deles:
+```bash
+npm run seed:leagues
+```
 
-   ```bash
-   npm run seed:countries
-   ```
+Execute `npm run seed:countries` antes. England e Scotland sao criadas automaticamente com codigos futebolisticos `ENG` e `SCO` quando necessario.
 
-3. Execute:
+### Logos das ligas
 
-   ```bash
-   npm run seed:leagues
-   ```
+O seed de ligas procura arquivos locais em `assets/league-logos/` e envia para o bucket `league-logos`. Sao aceitos `.svg`, `.png` e `.webp`.
 
-England e Scotland nao vem da REST Countries como paises independentes. O seed cria essas duas entradas automaticamente com codigos futebolisticos `ENG` e `SCO` caso elas ainda nao existam.
-
-### Logos Das Ligas
-
-Logos de campeonatos sao marcas registradas e podem mudar por patrocinio. Para evitar hotlink fragil ou uso de arquivos sem controle, o seed procura arquivos locais em `assets/league-logos/` e envia para o bucket `league-logos`.
-
-Use estes nomes de arquivo quando tiver os assets oficiais/licenciados:
+Exemplos de nomes esperados:
 
 ```txt
 premier-league.svg
@@ -107,46 +126,21 @@ la-liga.svg
 bundesliga.svg
 serie-a.svg
 ligue-1.svg
-liga-portugal.svg
-eredivisie.svg
-belgian-pro-league.svg
-danish-superliga.svg
-scottish-premiership.svg
-saudi-pro-league.svg
-major-league-soccer.svg
-liga-mx.svg
 campeonato-brasileiro-serie-a.svg
 liga-profesional-de-futbol.svg
-liga-auf-uruguaya.svg
-division-profesional-paraguay.svg
-liga-de-primera-chile.svg
-categoria-primera-a.svg
-liga-1-peru.svg
-ligapro-serie-a.svg
-division-profesional-bolivia.svg
-liga-futve.svg
 ```
 
-Tambem sao aceitos `.png` e `.webp`.
+Se um arquivo nao existir, a liga e cadastrada sem logo.
 
-## Popular Times
+### Times
 
-O seed de times usa paginas publicas de temporada da Wikipedia como fonte auditavel, uma por liga. Isso evita os limites de temporada da API-Football no plano gratis e tambem evita o retorno parcial de 10 clubes da TheSportsDB.
+O seed de times usa paginas publicas de temporada da Wikipedia como fonte auditavel. Ele valida a quantidade esperada de clubes antes de cadastrar para evitar listas parciais.
 
-O script valida a quantidade esperada de clubes antes de cadastrar. Se a pagina retornar menos ou mais clubes do que o esperado, a liga e ignorada para evitar dados errados.
+```bash
+npm run seed:teams
+```
 
-O script preenche:
-
-- `teams.name`: titulo do artigo do clube quando disponivel, geralmente mais proximo do nome oficial.
-- `teams.short_name`: nome exibido na tabela da temporada, geralmente o nome mais conhecido.
-- `teams.city`: cidade/localidade quando a tabela informa.
-- `teams.stadium`: estadio quando a tabela informa.
-- `teams.founded_year`: fica vazio por enquanto.
-- `teams.logo_url`: fica vazio por enquanto.
-
-Antes de rodar, execute o SQL atualizado em `supabase/schema.sql`, pois ele cria o indice unico `teams(league_id, name)`.
-
-Depois rode:
+Ordem recomendada:
 
 ```bash
 npm run seed:countries
@@ -154,9 +148,7 @@ npm run seed:leagues
 npm run seed:teams
 ```
 
-O script verifica os times ja cadastrados por liga e ignora os existentes para evitar duplicacao. Se uma fonte retornar lista incompleta ou com times demais, a liga e ignorada e o terminal mostra o motivo.
-
-Para testar a extracao sem gravar no Supabase:
+Dry run:
 
 ```bash
 SEED_TEAMS_DRY_RUN=1 npm run seed:teams
@@ -173,22 +165,26 @@ npm run seed:teams
 
 ```txt
 src/
-  app/
-  components/
-  lib/supabase/
-  services/
-  types/
+  app/                 Rotas do App Router
+  components/          Componentes de UI e formularios
+  lib/supabase/        Helpers de configuracao Supabase
+  services/            Acesso a dados de paises, ligas e times
+  types/               Tipos do banco e formularios
+scripts/               Seeds
 supabase/
   schema.sql
+assets/
+  league-logos/
 legacy/
   frontend/
   backend/
   database/
+docs/
 ```
 
-## Legado
+## Historico
 
-A estrutura antiga em Vue.js, Node/Express e Docker/MySQL foi movida para `legacy/` para preservar referencia historica sem misturar com a nova stack.
+O historico publico do projeto fica em `docs/history.md`. O arquivo `context.md` permanece privado e ignorado pelo Git para orientar a IA localmente.
 
 ## Licenca
 
