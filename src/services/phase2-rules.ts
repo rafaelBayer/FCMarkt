@@ -24,6 +24,8 @@ export type PlayerInput = {
   overall?: string | number | null;
   potential?: string | number | null;
   photoUrl?: string | null;
+  externalSource?: string | null;
+  externalId?: string | null;
 };
 
 export type SquadMembershipInput = {
@@ -79,7 +81,9 @@ export function normalizePlayerInput(input: PlayerInput & Record<string, unknown
     main_position: optionalText(input.mainPosition),
     overall: optionalRating(input.overall, "Overall"),
     potential: optionalRating(input.potential, "Potencial"),
-    photo_url: optionalText(input.photoUrl)
+    photo_url: optionalText(input.photoUrl),
+    external_source: optionalText(input.externalSource),
+    external_id: optionalText(input.externalId)
   };
 }
 

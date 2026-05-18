@@ -15,6 +15,8 @@ type PlayerFormProps = {
     overall?: number | null;
     potential?: number | null;
     photo_url?: string | null;
+    external_source?: string | null;
+    external_id?: string | null;
   };
   submitLabel?: string;
 };
@@ -116,6 +118,28 @@ export function PlayerForm({ action, initialValues, submitLabel = "Salvar jogado
             name="photoUrl"
             defaultValue={initialValues?.photo_url ?? ""}
             placeholder="https://..."
+            className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
+          />
+        </label>
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <label className="grid gap-2 text-sm font-medium text-slate-800">
+          Fonte externa
+          <input
+            name="externalSource"
+            defaultValue={initialValues?.external_source ?? ""}
+            placeholder="kaggle_eafc26"
+            className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
+          />
+        </label>
+
+        <label className="grid gap-2 text-sm font-medium text-slate-800">
+          ID externo
+          <input
+            name="externalId"
+            defaultValue={initialValues?.external_id ?? ""}
+            placeholder="12345"
             className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
           />
         </label>

@@ -19,7 +19,9 @@ async function createPlayerAction(_: FormState, formData: FormData): Promise<For
       mainPosition: String(formData.get("mainPosition") ?? ""),
       overall: String(formData.get("overall") ?? ""),
       potential: String(formData.get("potential") ?? ""),
-      photoUrl: String(formData.get("photoUrl") ?? "")
+      photoUrl: String(formData.get("photoUrl") ?? ""),
+      externalSource: String(formData.get("externalSource") ?? ""),
+      externalId: String(formData.get("externalId") ?? "")
     });
   } catch (error) {
     return {

@@ -56,11 +56,16 @@ create table if not exists players (
   overall int,
   potential int,
   photo_url text,
+  external_source text,
+  external_id text,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now(),
   constraint players_overall_check check (overall is null or (overall >= 1 and overall <= 99)),
   constraint players_potential_check check (potential is null or (potential >= 1 and potential <= 99))
 );
+
+alter table players add column if not exists external_source text;
+alter table players add column if not exists external_id text;
 
 create table if not exists squad_memberships (
   id uuid primary key default gen_random_uuid(),
@@ -106,6 +111,10 @@ create unique index if not exists squad_memberships_player_team_season_unique_id
 create unique index if not exists players_name_birth_date_unique_idx
   on players(name, birth_date)
   where birth_date is not null;
+create unique index if not exists players_external_source_external_id_unique_idx
+  on players(external_source, external_id)
+  where external_source is not null and external_id is not null;
+create index if not exists players_external_source_idx on players(external_source);
 
 -- Diagnostic queries to run before applying unique indexes to an existing database:
 -- select code, count(*) from countries where code is not null group by code having count(*) > 1;
@@ -114,6 +123,7 @@ create unique index if not exists players_name_birth_date_unique_idx
 -- select name, count(*) from seasons group by name having count(*) > 1;
 -- select player_id, team_id, season_id, count(*) from squad_memberships group by player_id, team_id, season_id having count(*) > 1;
 -- select name, birth_date, count(*) from players where birth_date is not null group by name, birth_date having count(*) > 1;
+-- select external_source, external_id, count(*) from players where external_source is not null and external_id is not null group by external_source, external_id having count(*) > 1;
 
 insert into storage.buckets (id, name, public)
 values ('team-logos', 'team-logos', true)

@@ -145,6 +145,8 @@ export type Database = {
           overall: number | null;
           potential: number | null;
           photo_url: string | null;
+          external_source: string | null;
+          external_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -158,6 +160,8 @@ export type Database = {
           overall?: number | null;
           potential?: number | null;
           photo_url?: string | null;
+          external_source?: string | null;
+          external_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -171,6 +175,8 @@ export type Database = {
           overall?: number | null;
           potential?: number | null;
           photo_url?: string | null;
+          external_source?: string | null;
+          external_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };

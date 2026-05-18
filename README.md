@@ -6,6 +6,8 @@ O MVP inicial focava em paises, ligas e times. A Fase 2 adiciona temporadas, jog
 
 A Fase 3 adiciona administracao basica: edicao, exclusao segura, diagnostico de duplicados e regras de integridade para proteger o historico do modo carreira.
 
+A Fase 4 inicia a importacao controlada de jogadores por CSV local, com dry run obrigatorio por padrao e suporte inicial ao dataset Kaggle EAFC26 Player Database.
+
 ## Stack
 
 - Next.js com App Router
@@ -32,6 +34,7 @@ A Fase 3 adiciona administracao basica: edicao, exclusao segura, diagnostico de 
 - Edicao de registros principais
 - Exclusao segura com confirmacao visual
 - Diagnostico simples de times duplicados em `/admin/duplicates`
+- Analise e importacao controlada de jogadores por CSV local
 
 ## Configuracao local
 
@@ -85,6 +88,7 @@ Tabelas criadas pelo schema:
 - `teams`: times vinculados a ligas
 - `seasons`: temporadas do universo do modo carreira
 - `players`: jogadores cadastrados manualmente, sem `team_id` fixo
+- `players.external_source` e `players.external_id`: referencia opcional para importacoes locais
 - `squad_memberships`: vinculos de jogadores com times por temporada
 - `transfers`: transferencias manuais com data do modo carreira
 
@@ -103,6 +107,7 @@ Constraints contra duplicidade:
 - `seasons(name)`
 - `squad_memberships(player_id, team_id, season_id)`
 - `players(name, birth_date)`, somente quando `birth_date` existir
+- `players(external_source, external_id)`, somente quando ambos existirem
 
 ## Scripts
 
@@ -114,6 +119,9 @@ npm run test
 npm run seed:countries
 npm run seed:leagues
 npm run seed:teams
+npm run analyze:eafc26
+npm run import:eafc26:players:dry
+npm run import:eafc26:players -- --execute
 ```
 
 ## Rotas principais
@@ -146,6 +154,38 @@ npm run test
 ```
 
 Os testes atuais protegem validacoes de temporadas, jogadores, elencos, transferencias, ordenacao por data e a regra de nao salvar `team_id` em `players`.
+
+Tambem ha testes para parser, mapper e dry run do importador EAFC26.
+
+## Importacao EAFC26 por CSV local
+
+Baixe manualmente o dataset `flynn28/eafc26-player-database` no Kaggle e coloque os CSVs em:
+
+```txt
+imports/kaggle/eafc26/
+```
+
+A pasta `imports/` fica ignorada pelo Git, incluindo CSVs baixados e relatorios.
+
+Analise os arquivos:
+
+```bash
+npm run analyze:eafc26
+```
+
+Rode o dry run:
+
+```bash
+npm run import:eafc26:players:dry
+```
+
+Importe de verdade somente depois de conferir o relatorio:
+
+```bash
+npm run import:eafc26:players -- --execute
+```
+
+O importador cria apenas jogadores em `players`. Ele nao cria times, ligas, transferencias ou elencos automaticamente. Veja mais em [docs/imports.md](docs/imports.md).
 
 ## Exclusao segura
 
