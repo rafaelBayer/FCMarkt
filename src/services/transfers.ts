@@ -53,6 +53,29 @@ export async function getTransfersByPlayerId(playerId: string): Promise<Transfer
   return sortTransfersByDateDesc((data ?? []) as TransferWithRelations[]);
 }
 
+export async function getTransferById(id: string): Promise<TransferWithRelations | null> {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("transfers")
+    .select(TRANSFER_SELECT)
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null;
+    }
+
+    throw new Error(`Erro ao buscar transferencia: ${error.message}`);
+  }
+
+  return data as TransferWithRelations;
+}
+
 export async function createTransfer(input: TransferInput) {
   const row = normalizeTransferInput(input);
   const supabase = await createSupabaseServerClient();
@@ -60,5 +83,24 @@ export async function createTransfer(input: TransferInput) {
 
   if (error) {
     throw new Error(`Erro ao cadastrar transferencia: ${error.message}`);
+  }
+}
+
+export async function updateTransfer(id: string, input: TransferInput) {
+  const row = normalizeTransferInput(input);
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.from("transfers").update(row).eq("id", id);
+
+  if (error) {
+    throw new Error(`Erro ao atualizar transferencia: ${error.message}`);
+  }
+}
+
+export async function deleteTransfer(id: string) {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.from("transfers").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(`Erro ao excluir transferencia: ${error.message}`);
   }
 }

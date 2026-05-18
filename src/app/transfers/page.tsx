@@ -1,18 +1,46 @@
+import { ActionLink } from "@/components/ui/ActionLink";
+import { DeleteButton } from "@/components/ui/DeleteButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SetupNotice } from "@/components/ui/SetupNotice";
 import { StatusMessage } from "@/components/ui/StatusMessage";
+import { assertConfirmed } from "@/services/admin-rules";
+import { getErrorMessage } from "@/lib/errors";
 import { formatDate, formatMoney } from "@/lib/format";
+import { redirectWithMessage } from "@/lib/action-redirects";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
-import { getTransfers } from "@/services/transfers";
+import { deleteTransfer, getTransfers } from "@/services/transfers";
 
 export const dynamic = "force-dynamic";
 
 type TransfersPageProps = {
   searchParams?: Promise<{
     created?: string;
+    updated?: string;
+    deleted?: string;
+    error?: string;
   }>;
 };
+
+async function deleteTransferAction(formData: FormData) {
+  "use server";
+
+  const id = String(formData.get("id") ?? "");
+  let errorMessage: string | null = null;
+
+  try {
+    assertConfirmed(formData.get("confirmed") === "1", "transferencia");
+    await deleteTransfer(id);
+  } catch (error) {
+    errorMessage = getErrorMessage(error, "Nao foi possivel excluir a transferencia.");
+  }
+
+  if (errorMessage) {
+    redirectWithMessage("/transfers", "error", errorMessage);
+  }
+
+  redirectWithMessage("/transfers", "deleted", "Transferencia excluida com sucesso.");
+}
 
 export default async function TransfersPage({ searchParams }: TransfersPageProps) {
   const params = await searchParams;
@@ -28,6 +56,11 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
       {params?.created === "transfer" ? (
         <StatusMessage tone="success">Transferencia cadastrada com sucesso.</StatusMessage>
       ) : null}
+      {params?.updated === "transfer" ? (
+        <StatusMessage tone="success">Transferencia atualizada com sucesso.</StatusMessage>
+      ) : null}
+      {params?.deleted ? <StatusMessage tone="success">{params.deleted}</StatusMessage> : null}
+      {params?.error ? <StatusMessage tone="error">{params.error}</StatusMessage> : null}
       {!isSupabaseConfigured() ? <SetupNotice /> : null}
 
       {transfers.length === 0 ? (
@@ -49,6 +82,7 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
                   <th className="min-w-32 px-4 py-3">Data</th>
                   <th className="min-w-28 px-4 py-3">Tipo</th>
                   <th className="min-w-32 px-4 py-3">Valor</th>
+                  <th className="min-w-44 px-4 py-3">Acoes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -67,6 +101,16 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
                     <td className="px-4 py-3 text-slate-700">{formatDate(transfer.transfer_date)}</td>
                     <td className="px-4 py-3 text-slate-700">{transfer.transfer_type}</td>
                     <td className="px-4 py-3 text-slate-700">{formatMoney(transfer.fee)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-2">
+                        <ActionLink href={`/transfers/${transfer.id}/edit`}>Editar</ActionLink>
+                        <DeleteButton
+                          id={transfer.id}
+                          action={deleteTransferAction}
+                          confirmMessage="Excluir esta transferencia? O historico sera removido deste jogador."
+                        />
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

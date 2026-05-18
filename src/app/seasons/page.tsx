@@ -1,17 +1,45 @@
+import { ActionLink } from "@/components/ui/ActionLink";
+import { DeleteButton } from "@/components/ui/DeleteButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SetupNotice } from "@/components/ui/SetupNotice";
 import { StatusMessage } from "@/components/ui/StatusMessage";
+import { assertConfirmed } from "@/services/admin-rules";
+import { getErrorMessage } from "@/lib/errors";
+import { redirectWithMessage } from "@/lib/action-redirects";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
-import { getSeasons } from "@/services/seasons";
+import { deleteSeason, getSeasons } from "@/services/seasons";
 
 export const dynamic = "force-dynamic";
 
 type SeasonsPageProps = {
   searchParams?: Promise<{
     created?: string;
+    updated?: string;
+    deleted?: string;
+    error?: string;
   }>;
 };
+
+async function deleteSeasonAction(formData: FormData) {
+  "use server";
+
+  const id = String(formData.get("id") ?? "");
+  let errorMessage: string | null = null;
+
+  try {
+    assertConfirmed(formData.get("confirmed") === "1", "temporada");
+    await deleteSeason(id);
+  } catch (error) {
+    errorMessage = getErrorMessage(error, "Nao foi possivel excluir a temporada.");
+  }
+
+  if (errorMessage) {
+    redirectWithMessage("/seasons", "error", errorMessage);
+  }
+
+  redirectWithMessage("/seasons", "deleted", "Temporada excluida com sucesso.");
+}
 
 export default async function SeasonsPage({ searchParams }: SeasonsPageProps) {
   const params = await searchParams;
@@ -27,6 +55,11 @@ export default async function SeasonsPage({ searchParams }: SeasonsPageProps) {
       {params?.created === "season" ? (
         <StatusMessage tone="success">Temporada cadastrada com sucesso.</StatusMessage>
       ) : null}
+      {params?.updated === "season" ? (
+        <StatusMessage tone="success">Temporada atualizada com sucesso.</StatusMessage>
+      ) : null}
+      {params?.deleted ? <StatusMessage tone="success">{params.deleted}</StatusMessage> : null}
+      {params?.error ? <StatusMessage tone="error">{params.error}</StatusMessage> : null}
       {!isSupabaseConfigured() ? <SetupNotice /> : null}
 
       {seasons.length === 0 ? (
@@ -46,6 +79,14 @@ export default async function SeasonsPage({ searchParams }: SeasonsPageProps) {
               <p className="mt-1 text-sm text-slate-600">
                 {season.start_year} ate {season.end_year}
               </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <ActionLink href={`/seasons/${season.id}/edit`}>Editar</ActionLink>
+                <DeleteButton
+                  id={season.id}
+                  action={deleteSeasonAction}
+                  confirmMessage="Excluir esta temporada? Esta acao so sera permitida se nao houver elencos ou transferencias vinculadas."
+                />
+              </div>
             </div>
           ))}
         </div>

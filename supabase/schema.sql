@@ -101,6 +101,19 @@ create index if not exists transfers_to_team_id_idx on transfers(to_team_id);
 create index if not exists transfers_season_id_idx on transfers(season_id);
 create index if not exists transfers_transfer_date_idx on transfers(transfer_date desc);
 create unique index if not exists seasons_name_unique_idx on seasons(name);
+create unique index if not exists squad_memberships_player_team_season_unique_idx
+  on squad_memberships(player_id, team_id, season_id);
+create unique index if not exists players_name_birth_date_unique_idx
+  on players(name, birth_date)
+  where birth_date is not null;
+
+-- Diagnostic queries to run before applying unique indexes to an existing database:
+-- select code, count(*) from countries where code is not null group by code having count(*) > 1;
+-- select country_id, name, count(*) from leagues group by country_id, name having count(*) > 1;
+-- select league_id, name, count(*) from teams group by league_id, name having count(*) > 1;
+-- select name, count(*) from seasons group by name having count(*) > 1;
+-- select player_id, team_id, season_id, count(*) from squad_memberships group by player_id, team_id, season_id having count(*) > 1;
+-- select name, birth_date, count(*) from players where birth_date is not null group by name, birth_date having count(*) > 1;
 
 insert into storage.buckets (id, name, public)
 values ('team-logos', 'team-logos', true)

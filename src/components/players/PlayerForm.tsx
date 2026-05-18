@@ -6,9 +6,20 @@ import { initialFormState, type FormState } from "@/types/forms";
 
 type PlayerFormProps = {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
+  initialValues?: {
+    name?: string | null;
+    known_name?: string | null;
+    nationality?: string | null;
+    birth_date?: string | null;
+    main_position?: string | null;
+    overall?: number | null;
+    potential?: number | null;
+    photo_url?: string | null;
+  };
+  submitLabel?: string;
 };
 
-export function PlayerForm({ action }: PlayerFormProps) {
+export function PlayerForm({ action, initialValues, submitLabel = "Salvar jogador" }: PlayerFormProps) {
   const [state, formAction, pending] = useActionState(action, initialFormState);
 
   return (
@@ -23,6 +34,7 @@ export function PlayerForm({ action }: PlayerFormProps) {
           <input
             required
             name="name"
+            defaultValue={initialValues?.name ?? ""}
             placeholder="Gabriel Silva"
             className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
           />
@@ -32,6 +44,7 @@ export function PlayerForm({ action }: PlayerFormProps) {
           Nome conhecido
           <input
             name="knownName"
+            defaultValue={initialValues?.known_name ?? ""}
             placeholder="G. Silva"
             className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
           />
@@ -43,6 +56,7 @@ export function PlayerForm({ action }: PlayerFormProps) {
           Nacionalidade
           <input
             name="nationality"
+            defaultValue={initialValues?.nationality ?? ""}
             placeholder="Brazil"
             className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
           />
@@ -53,6 +67,7 @@ export function PlayerForm({ action }: PlayerFormProps) {
           <input
             name="birthDate"
             type="date"
+            defaultValue={initialValues?.birth_date ?? ""}
             className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
           />
         </label>
@@ -61,6 +76,7 @@ export function PlayerForm({ action }: PlayerFormProps) {
           Posicao
           <input
             name="mainPosition"
+            defaultValue={initialValues?.main_position ?? ""}
             placeholder="ST"
             className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
           />
@@ -73,6 +89,7 @@ export function PlayerForm({ action }: PlayerFormProps) {
           <input
             name="overall"
             type="number"
+            defaultValue={initialValues?.overall ?? ""}
             min={1}
             max={99}
             placeholder="72"
@@ -85,6 +102,7 @@ export function PlayerForm({ action }: PlayerFormProps) {
           <input
             name="potential"
             type="number"
+            defaultValue={initialValues?.potential ?? ""}
             min={1}
             max={99}
             placeholder="84"
@@ -96,6 +114,7 @@ export function PlayerForm({ action }: PlayerFormProps) {
           URL da foto
           <input
             name="photoUrl"
+            defaultValue={initialValues?.photo_url ?? ""}
             placeholder="https://..."
             className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
           />
@@ -107,7 +126,7 @@ export function PlayerForm({ action }: PlayerFormProps) {
         disabled={pending}
         className="w-fit rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
-        {pending ? "Salvando..." : "Salvar jogador"}
+        {pending ? "Salvando..." : submitLabel}
       </button>
     </form>
   );

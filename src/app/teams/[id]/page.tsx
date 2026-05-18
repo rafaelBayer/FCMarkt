@@ -1,21 +1,26 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ActionLink } from "@/components/ui/ActionLink";
+import { DeleteButton } from "@/components/ui/DeleteButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LogoBox } from "@/components/ui/LogoBox";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SetupNotice } from "@/components/ui/SetupNotice";
 import { SquadMembershipForm } from "@/components/squad-memberships/SquadMembershipForm";
 import { StatusMessage } from "@/components/ui/StatusMessage";
+import { assertConfirmed } from "@/services/admin-rules";
 import { getErrorMessage } from "@/lib/errors";
 import { formatDate } from "@/lib/format";
+import { redirectWithMessage } from "@/lib/action-redirects";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { getPlayers } from "@/services/players";
 import { getSeasons } from "@/services/seasons";
 import {
   createSquadMembership,
+  deleteSquadMembership,
   getSquadMembershipsByTeamId
 } from "@/services/squad-memberships";
-import { getTeamById } from "@/services/teams";
+import { deleteTeam, getTeamById } from "@/services/teams";
 import type { FormState } from "@/types/forms";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +31,8 @@ type TeamDetailsPageProps = {
   }>;
   searchParams?: Promise<{
     created?: string;
+    deleted?: string;
+    error?: string;
     seasonId?: string;
   }>;
 };
@@ -58,6 +65,50 @@ async function createSquadMembershipAction(_: FormState, formData: FormData): Pr
   }
 
   redirect(`/teams/${teamId}?${query.toString()}`);
+}
+
+async function deleteTeamAction(formData: FormData) {
+  "use server";
+
+  const id = String(formData.get("id") ?? "");
+  let errorMessage: string | null = null;
+
+  try {
+    assertConfirmed(formData.get("confirmed") === "1", "time");
+    await deleteTeam(id);
+  } catch (error) {
+    errorMessage = getErrorMessage(error, "Nao foi possivel excluir o time.");
+  }
+
+  if (errorMessage) {
+    redirectWithMessage(`/teams/${id}`, "error", errorMessage);
+  }
+
+  redirectWithMessage("/teams", "deleted", "Time excluido com sucesso.");
+}
+
+async function deleteSquadMembershipAction(formData: FormData) {
+  "use server";
+
+  const id = String(formData.get("id") ?? "");
+  const teamId = String(formData.get("teamId") ?? "");
+  const seasonId = String(formData.get("seasonId") ?? "");
+  let errorMessage: string | null = null;
+
+  try {
+    assertConfirmed(formData.get("confirmed") === "1", "vinculo de elenco");
+    await deleteSquadMembership(id);
+  } catch (error) {
+    errorMessage = getErrorMessage(error, "Nao foi possivel excluir o vinculo de elenco.");
+  }
+
+  const path = seasonId ? `/teams/${teamId}?seasonId=${seasonId}` : `/teams/${teamId}`;
+
+  if (errorMessage) {
+    redirectWithMessage(path, "error", errorMessage);
+  }
+
+  redirectWithMessage(path, "deleted", "Vinculo de elenco excluido com sucesso.");
 }
 
 export default async function TeamDetailsPage({ params, searchParams }: TeamDetailsPageProps) {
@@ -97,6 +148,8 @@ export default async function TeamDetailsPage({ params, searchParams }: TeamDeta
       {query?.created === "squadMembership" ? (
         <StatusMessage tone="success">Jogador adicionado ao elenco com sucesso.</StatusMessage>
       ) : null}
+      {query?.deleted ? <StatusMessage tone="success">{query.deleted}</StatusMessage> : null}
+      {query?.error ? <StatusMessage tone="error">{query.error}</StatusMessage> : null}
       <section className="grid gap-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-[180px_1fr]">
         <LogoBox src={team.logo_url} label={displayName} size="xl" />
         <div className="space-y-6">
@@ -125,6 +178,14 @@ export default async function TeamDetailsPage({ params, searchParams }: TeamDeta
             <Info label="Nome oficial" value={team.name} />
           </dl>
           {team.description ? <p className="leading-7 text-slate-700">{team.description}</p> : null}
+          <div className="flex flex-wrap gap-2">
+            <ActionLink href={`/teams/${team.id}/edit`}>Editar time</ActionLink>
+            <DeleteButton
+              id={team.id}
+              action={deleteTeamAction}
+              confirmMessage="Excluir este time? Esta acao so sera permitida se nao houver elenco ou transferencias vinculadas."
+            />
+          </div>
         </div>
       </section>
 
@@ -184,6 +245,7 @@ export default async function TeamDetailsPage({ params, searchParams }: TeamDeta
                     <th className="min-w-36 px-4 py-3">Temporada</th>
                     <th className="min-w-32 px-4 py-3">Entrada</th>
                     <th className="min-w-32 px-4 py-3">Saida</th>
+                    <th className="min-w-32 px-4 py-3">Acoes</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -209,6 +271,17 @@ export default async function TeamDetailsPage({ params, searchParams }: TeamDeta
                       </td>
                       <td className="px-4 py-3 text-slate-700">{formatDate(membership.joined_at)}</td>
                       <td className="px-4 py-3 text-slate-700">{formatDate(membership.left_at)}</td>
+                      <td className="px-4 py-3">
+                        <DeleteButton
+                          id={membership.id}
+                          action={deleteSquadMembershipAction}
+                          fields={{
+                            teamId: team.id,
+                            seasonId: selectedSeasonId ?? ""
+                          }}
+                          confirmMessage="Excluir este vinculo de elenco?"
+                        />
+                      </td>
                     </tr>
                   ))}
                 </tbody>

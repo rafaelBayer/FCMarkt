@@ -1,18 +1,46 @@
 import Link from "next/link";
+import { ActionLink } from "@/components/ui/ActionLink";
+import { DeleteButton } from "@/components/ui/DeleteButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SetupNotice } from "@/components/ui/SetupNotice";
 import { StatusMessage } from "@/components/ui/StatusMessage";
+import { assertConfirmed } from "@/services/admin-rules";
+import { getErrorMessage } from "@/lib/errors";
+import { redirectWithMessage } from "@/lib/action-redirects";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
-import { getPlayers } from "@/services/players";
+import { deletePlayer, getPlayers } from "@/services/players";
 
 export const dynamic = "force-dynamic";
 
 type PlayersPageProps = {
   searchParams?: Promise<{
     created?: string;
+    updated?: string;
+    deleted?: string;
+    error?: string;
   }>;
 };
+
+async function deletePlayerAction(formData: FormData) {
+  "use server";
+
+  const id = String(formData.get("id") ?? "");
+  let errorMessage: string | null = null;
+
+  try {
+    assertConfirmed(formData.get("confirmed") === "1", "jogador");
+    await deletePlayer(id);
+  } catch (error) {
+    errorMessage = getErrorMessage(error, "Nao foi possivel excluir o jogador.");
+  }
+
+  if (errorMessage) {
+    redirectWithMessage("/players", "error", errorMessage);
+  }
+
+  redirectWithMessage("/players", "deleted", "Jogador excluido com sucesso.");
+}
 
 export default async function PlayersPage({ searchParams }: PlayersPageProps) {
   const params = await searchParams;
@@ -28,6 +56,11 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       {params?.created === "player" ? (
         <StatusMessage tone="success">Jogador cadastrado com sucesso.</StatusMessage>
       ) : null}
+      {params?.updated === "player" ? (
+        <StatusMessage tone="success">Jogador atualizado com sucesso.</StatusMessage>
+      ) : null}
+      {params?.deleted ? <StatusMessage tone="success">{params.deleted}</StatusMessage> : null}
+      {params?.error ? <StatusMessage tone="error">{params.error}</StatusMessage> : null}
       {!isSupabaseConfigured() ? <SetupNotice /> : null}
 
       {players.length === 0 ? (
@@ -47,6 +80,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
                   <th className="w-28 px-4 py-3">Posicao</th>
                   <th className="w-24 px-4 py-3">Overall</th>
                   <th className="w-24 px-4 py-3">Potencial</th>
+                  <th className="w-48 px-4 py-3">Acoes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -64,6 +98,16 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
                     <td className="px-4 py-3 text-slate-700">{player.main_position || "Nao informado"}</td>
                     <td className="px-4 py-3 text-slate-700">{player.overall ?? "Nao informado"}</td>
                     <td className="px-4 py-3 text-slate-700">{player.potential ?? "Nao informado"}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-2">
+                        <ActionLink href={`/players/${player.id}/edit`}>Editar</ActionLink>
+                        <DeleteButton
+                          id={player.id}
+                          action={deletePlayerAction}
+                          confirmMessage="Excluir este jogador? Esta acao so sera permitida se nao houver elenco ou transferencias vinculadas."
+                        />
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

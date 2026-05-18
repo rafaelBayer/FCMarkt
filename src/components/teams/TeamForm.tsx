@@ -8,9 +8,20 @@ import { StatusMessage } from "@/components/ui/StatusMessage";
 type TeamFormProps = {
   leagues: LeagueWithCountry[];
   action: (state: FormState, formData: FormData) => Promise<FormState>;
+  initialValues?: {
+    name?: string | null;
+    short_name?: string | null;
+    league_id?: string | null;
+    city?: string | null;
+    stadium?: string | null;
+    founded_year?: number | null;
+    logo_url?: string | null;
+    description?: string | null;
+  };
+  submitLabel?: string;
 };
 
-export function TeamForm({ leagues, action }: TeamFormProps) {
+export function TeamForm({ leagues, action, initialValues, submitLabel = "Salvar time" }: TeamFormProps) {
   const [state, formAction, pending] = useActionState(action, initialFormState);
   const hasLeagues = leagues.length > 0;
 
@@ -31,6 +42,7 @@ export function TeamForm({ leagues, action }: TeamFormProps) {
           <input
             required
             name="name"
+            defaultValue={initialValues?.name ?? ""}
             placeholder="FC Barcelona"
             className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
           />
@@ -39,6 +51,7 @@ export function TeamForm({ leagues, action }: TeamFormProps) {
           Nome curto
           <input
             name="shortName"
+            defaultValue={initialValues?.short_name ?? ""}
             placeholder="BAR"
             className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
           />
@@ -52,7 +65,7 @@ export function TeamForm({ leagues, action }: TeamFormProps) {
           name="leagueId"
           disabled={!hasLeagues}
           className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
-          defaultValue=""
+          defaultValue={initialValues?.league_id ?? ""}
         >
           <option value="" disabled>
             Selecione uma liga
@@ -70,6 +83,7 @@ export function TeamForm({ leagues, action }: TeamFormProps) {
           Cidade
           <input
             name="city"
+            defaultValue={initialValues?.city ?? ""}
             placeholder="Barcelona"
             className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
           />
@@ -78,6 +92,7 @@ export function TeamForm({ leagues, action }: TeamFormProps) {
           Estadio
           <input
             name="stadium"
+            defaultValue={initialValues?.stadium ?? ""}
             placeholder="Camp Nou"
             className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
           />
@@ -89,9 +104,20 @@ export function TeamForm({ leagues, action }: TeamFormProps) {
         <input
           name="foundedYear"
           type="number"
+          defaultValue={initialValues?.founded_year ?? ""}
           min={1800}
           max={2100}
           placeholder="1899"
+          className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
+        />
+      </label>
+
+      <label className="grid gap-2 text-sm font-medium text-slate-800">
+        URL da logo
+        <input
+          name="logoUrl"
+          defaultValue={initialValues?.logo_url ?? ""}
+          placeholder="https://..."
           className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
         />
       </label>
@@ -111,6 +137,7 @@ export function TeamForm({ leagues, action }: TeamFormProps) {
         <textarea
           name="description"
           rows={5}
+          defaultValue={initialValues?.description ?? ""}
           placeholder="Resumo do time no modo carreira."
           className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
         />
@@ -121,7 +148,7 @@ export function TeamForm({ leagues, action }: TeamFormProps) {
         disabled={pending || !hasLeagues}
         className="w-fit rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
-        {pending ? "Salvando..." : "Salvar time"}
+        {pending ? "Salvando..." : submitLabel}
       </button>
     </form>
   );
