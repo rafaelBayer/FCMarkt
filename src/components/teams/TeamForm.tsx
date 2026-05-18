@@ -1,16 +1,30 @@
+"use client";
+
+import { useActionState } from "react";
 import type { LeagueWithCountry } from "@/types/database";
+import { initialFormState, type FormState } from "@/types/forms";
+import { StatusMessage } from "@/components/ui/StatusMessage";
 
 type TeamFormProps = {
   leagues: LeagueWithCountry[];
-  action: (formData: FormData) => void | Promise<void>;
+  action: (state: FormState, formData: FormData) => Promise<FormState>;
 };
 
 export function TeamForm({ leagues, action }: TeamFormProps) {
+  const [state, formAction, pending] = useActionState(action, initialFormState);
+  const hasLeagues = leagues.length > 0;
+
   return (
     <form
-      action={action}
+      action={formAction}
       className="grid max-w-3xl gap-5 rounded-lg border border-slate-200 bg-white p-6"
     >
+      {state.status === "error" && state.message ? (
+        <StatusMessage tone="error">{state.message}</StatusMessage>
+      ) : null}
+      {!hasLeagues ? (
+        <StatusMessage tone="error">Cadastre pelo menos uma liga antes de criar um time.</StatusMessage>
+      ) : null}
       <div className="grid gap-5 sm:grid-cols-2">
         <label className="grid gap-2 text-sm font-medium text-slate-800">
           Nome
@@ -36,6 +50,7 @@ export function TeamForm({ leagues, action }: TeamFormProps) {
         <select
           required
           name="leagueId"
+          disabled={!hasLeagues}
           className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
           defaultValue=""
         >
@@ -103,9 +118,10 @@ export function TeamForm({ leagues, action }: TeamFormProps) {
 
       <button
         type="submit"
-        className="w-fit rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
+        disabled={pending || !hasLeagues}
+        className="w-fit rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
-        Salvar time
+        {pending ? "Salvando..." : "Salvar time"}
       </button>
     </form>
   );

@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { LogoBox } from "@/components/ui/LogoBox";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SetupNotice } from "@/components/ui/SetupNotice";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
@@ -35,22 +37,30 @@ export default async function TeamDetailsPage({ params }: TeamDetailsPageProps) 
 
   return (
     <div>
-      <PageHeader title={displayName} description="Pagina publica de detalhes do time." />
+      <PageHeader
+        title={displayName}
+        description={`${league?.name ?? "Liga nao informada"}${country ? ` - ${country.name}` : ""}`}
+      />
       <section className="grid gap-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-[180px_1fr]">
-        <div className="flex h-44 w-44 items-center justify-center rounded-lg border border-slate-200 bg-slate-50">
-          {team.logo_url ? (
-            <img src={team.logo_url} alt="" className="max-h-36 max-w-36 object-contain" />
-          ) : (
-            <span className="text-4xl font-bold text-slate-300">{displayName.slice(0, 2)}</span>
-          )}
-        </div>
+        <LogoBox src={team.logo_url} label={displayName} size="xl" />
         <div className="space-y-6">
           <div>
             <h2 className="text-2xl font-bold text-slate-950">{displayName}</h2>
-            <p className="mt-1 text-slate-600">
-              {league?.name ?? "Liga nao informada"}
-              {country ? `, ${country.name}` : ""}
-            </p>
+            <div className="mt-2 flex flex-wrap gap-2 text-sm font-medium">
+              {league ? (
+                <Link
+                  href={`/leagues/${league.id}`}
+                  className="rounded-md bg-teal-50 px-3 py-1.5 text-teal-800 hover:bg-teal-100"
+                >
+                  {league.name}
+                </Link>
+              ) : (
+                <span className="rounded-md bg-slate-100 px-3 py-1.5 text-slate-600">Liga nao informada</span>
+              )}
+              <span className="rounded-md bg-slate-100 px-3 py-1.5 text-slate-700">
+                {country?.name ?? "Pais nao informado"}
+              </span>
+            </div>
           </div>
           <dl className="grid gap-4 sm:grid-cols-2">
             <Info label="Cidade" value={team.city} />

@@ -1,12 +1,20 @@
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SetupNotice } from "@/components/ui/SetupNotice";
+import { StatusMessage } from "@/components/ui/StatusMessage";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { getCountries } from "@/services/countries";
 
 export const dynamic = "force-dynamic";
 
-export default async function CountriesPage() {
+type CountriesPageProps = {
+  searchParams?: Promise<{
+    created?: string;
+  }>;
+};
+
+export default async function CountriesPage({ searchParams }: CountriesPageProps) {
+  const params = await searchParams;
   const countries = await getCountries();
 
   return (
@@ -16,9 +24,16 @@ export default async function CountriesPage() {
         description="Cadastre os paises que vao organizar suas ligas do modo carreira."
         action={{ href: "/countries/new", label: "Novo pais" }}
       />
+      {params?.created === "country" ? (
+        <StatusMessage tone="success">Pais cadastrado com sucesso.</StatusMessage>
+      ) : null}
       {!isSupabaseConfigured() ? <SetupNotice /> : null}
       {countries.length === 0 ? (
-        <EmptyState title="Nenhum pais cadastrado" description="Comece criando o primeiro pais." />
+        <EmptyState
+          title="Nenhum pais cadastrado"
+          description="Comece criando o primeiro pais para liberar o cadastro de ligas."
+          action={{ href: "/countries/new", label: "Criar pais" }}
+        />
       ) : (
         <div className="grid gap-3">
           {countries.map((country) => (

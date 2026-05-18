@@ -1,13 +1,27 @@
+"use client";
+
+import { useActionState } from "react";
 import type { Country } from "@/types/database";
+import { initialFormState, type FormState } from "@/types/forms";
+import { StatusMessage } from "@/components/ui/StatusMessage";
 
 type LeagueFormProps = {
   countries: Country[];
-  action: (formData: FormData) => void | Promise<void>;
+  action: (state: FormState, formData: FormData) => Promise<FormState>;
 };
 
 export function LeagueForm({ countries, action }: LeagueFormProps) {
+  const [state, formAction, pending] = useActionState(action, initialFormState);
+  const hasCountries = countries.length > 0;
+
   return (
-    <form action={action} className="grid max-w-2xl gap-5 rounded-lg border border-slate-200 bg-white p-6">
+    <form action={formAction} className="grid max-w-2xl gap-5 rounded-lg border border-slate-200 bg-white p-6">
+      {state.status === "error" && state.message ? (
+        <StatusMessage tone="error">{state.message}</StatusMessage>
+      ) : null}
+      {!hasCountries ? (
+        <StatusMessage tone="error">Cadastre pelo menos um pais antes de criar uma liga.</StatusMessage>
+      ) : null}
       <label className="grid gap-2 text-sm font-medium text-slate-800">
         Nome
         <input
@@ -22,6 +36,7 @@ export function LeagueForm({ countries, action }: LeagueFormProps) {
         <select
           required
           name="countryId"
+          disabled={!hasCountries}
           className="rounded-md border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-teal-700"
           defaultValue=""
         >
@@ -45,9 +60,10 @@ export function LeagueForm({ countries, action }: LeagueFormProps) {
       </label>
       <button
         type="submit"
-        className="w-fit rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
+        disabled={pending || !hasCountries}
+        className="w-fit rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
-        Salvar liga
+        {pending ? "Salvando..." : "Salvar liga"}
       </button>
     </form>
   );

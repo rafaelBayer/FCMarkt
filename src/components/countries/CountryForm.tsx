@@ -1,10 +1,21 @@
+"use client";
+
+import { useActionState } from "react";
+import { initialFormState, type FormState } from "@/types/forms";
+import { StatusMessage } from "@/components/ui/StatusMessage";
+
 type CountryFormProps = {
-  action: (formData: FormData) => void | Promise<void>;
+  action: (state: FormState, formData: FormData) => Promise<FormState>;
 };
 
 export function CountryForm({ action }: CountryFormProps) {
+  const [state, formAction, pending] = useActionState(action, initialFormState);
+
   return (
-    <form action={action} className="grid max-w-2xl gap-5 rounded-lg border border-slate-200 bg-white p-6">
+    <form action={formAction} className="grid max-w-2xl gap-5 rounded-lg border border-slate-200 bg-white p-6">
+      {state.status === "error" && state.message ? (
+        <StatusMessage tone="error">{state.message}</StatusMessage>
+      ) : null}
       <label className="grid gap-2 text-sm font-medium text-slate-800">
         Nome
         <input
@@ -25,9 +36,10 @@ export function CountryForm({ action }: CountryFormProps) {
       </label>
       <button
         type="submit"
-        className="w-fit rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
+        disabled={pending}
+        className="w-fit rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
-        Salvar pais
+        {pending ? "Salvando..." : "Salvar pais"}
       </button>
     </form>
   );
